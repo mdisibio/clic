@@ -12,28 +12,32 @@
 * Automatically setup and delete aliases when installing/uninstalling packages
 * Things should be sane, and for troubleshooting you should be able to run `which command` and
   have it show you something that makes sense
+  
+* Ability to install and run custom containers, i.e. VIM container with a bunch of plugins
 
 
 # Example commands:
 
-`cc install git`
+`clic install git`
 
-`cc install terraform`
+`clic install terraform`
 
-`cc install terraform@0.12`
+`clic install terraform@0.12`
 
-`cc uninstall terraform`
+`clic uninstall terraform`
 
-`cc upgrade terraform`
+`clic upgrade terraform`
 
-`cc ls`   <--- list installed
+`clic ls`   <--- list installed
 
-`cc search terraform*` <--- search registry
+`clic search terraform*` <--- search registry
 
 `terraform <args>`     <-- runs in docker
 
 `terraform@0.12 <args>`   <-- runs in docker
 
+`clic run terraform <args>` <-- runs in docker
+
 `which terraform` ->  `/usr/local/bin/cc/terraform/0.12/entrypoint.sh`   (or something)
 
-`cc pin terraform@0.12`   <-- creates .ccprefs file and now "terraform" in this folder always points to 0.12
+`clic pin terraform@0.12`   <-- creates .ccprefs file and now "terraform" in this folder always points to 0.12
