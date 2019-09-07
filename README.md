@@ -44,6 +44,7 @@
 
 # Cool commands that would benefit from this
 * kubectl
+* kubeadm
 * vim (with plugins)
 * terraform
 * awslogs
