@@ -41,3 +41,13 @@
 `which terraform` ->  `/usr/local/bin/cc/terraform/0.12/entrypoint.sh`   (or something)
 
 `clic pin terraform@0.12`   <-- creates .ccprefs file and now "terraform" in this folder always points to 0.12
+
+# Cool commands that would benefit from this
+* kubectl
+* vim (with plugins)
+* terraform
+* awslogs
+* aws cli
+* anisble
+* go
+* python@someVer
