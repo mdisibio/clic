@@ -1,0 +1,17 @@
+aliases:
+  terraform: terraform@0.12.8
+  kubectl: kubectl@1.15.3
+
+commands:
+
+  kubectl@1.15.3:
+    image: lachlanevenson/k8s-kubectl:v1.15.3
+
+  terraform@0.12.8:
+    image: hashicorp/terraform:0.12.8
+    workdir: /root
+
+  terraform@0.11.13:
+    image: hashicorp/terraform:0.11.13
+    workdir: /root
+  
