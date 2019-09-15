@@ -8,8 +8,10 @@ interface IData {
     commands: Map<string, IResolvedCommand>
 }
 interface IResolvedCommand {
-    workdir: string
-    image: string
+    workdir : string
+    image : string
+    entrypoint : string
+    volumes: string[]
 }
 
 function loadData() : IData {
@@ -21,6 +23,7 @@ function createCmdLine(
     image: string, 
     volumes: any[], 
     workdir: string, 
+    entrypoint: string,
     args: string[]) 
 {
     var commandLine = "docker run -i";
@@ -32,6 +35,10 @@ function createCmdLine(
 
     if(workdir > '') {
         commandLine += " -w " + workdir
+    }
+
+    if(entrypoint > '') {
+        commandLine += " --entrypoint " + entrypoint
     }
 
     commandLine += " " + image
@@ -73,7 +80,7 @@ function getUserHome() {
 }
 
 function determineVolumes(command : IResolvedCommand) {
-    var volumes = []
+    var volumes = command.volumes || []
     var finalWorkDir = ''
 
     if(command.workdir > '') {
@@ -94,7 +101,7 @@ function run(explain : boolean, args) {
     args = args.slice(1);
     var resolved = resolveCommand(cmdName)    
     let {volumes, workdir} = determineVolumes(resolved)
-    var cmdLine = createCmdLine(resolved.image, volumes, workdir, args)
+    var cmdLine = createCmdLine(resolved.image, volumes, workdir, resolved.entrypoint, args)
 
     if(explain) {
         console.info(cmdLine);
@@ -103,11 +110,51 @@ function run(explain : boolean, args) {
     }
 }
 
+function link(linkName : string) {
+    var clic = path.join(__dirname, 'clic.sh')
+    var link = path.join('/usr/local/bin', linkName)
+
+    if(fs.existsSync(link)) {
+        fs.unlinkSync(link)
+    }
+    fs.symlinkSync(clic, link)
+
+    console.info(`Command ${linkName} linked as ${link}`)
+}
+
+function unlink(linkName : string) {
+    var link = path.join('/usr/local/bin', linkName)
+    if(fs.existsSync(link)) {
+        fs.unlinkSync(link)
+        console.info(`${link} unlinked`)
+    } else {
+        console.info(`Command ${linkName} not linked`)
+    }
+}
+
+function install(cmdName : string) {
+    if(cmdName == 'clic') {
+        link('clic')
+    }
+}
+
 var args = process.argv.slice(2)
 var command = args[0];
 args = args.slice(1)
 
 switch(command) {
+    case 'install':
+        install(args[0])
+        break;
+
+    case 'link':
+        link(args[0])
+        break;
+
+    case 'unlink':
+        unlink(args[0])
+        break;
+
     case 'run':
         run(false, args)
         break;
@@ -117,6 +164,6 @@ switch(command) {
         break;
 
     default:
-        console.log("Usage: clic run <file.yaml>")
+        console.log("Usage: clic run <cmd@...> <args>")
 }
 
