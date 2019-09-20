@@ -20,4 +20,17 @@ commands:
     workdir: /root
     entrypoint: /usr/local/bin/awslogs
     volumes:
-      - ${USERPROFILE-~}/.aws:/root/.aws
+      - ${USERPROFILE-~}/.aws:/root/.aws:ro
+
+  nsnake:
+    dockerfile: Dockerfile.nsnake
+    entrypoint: /usr/games/nsnake
+
+  test-hello-world:
+    image: hello-world
+
+  test-exit-code:
+    image: ryanbrainard/exit-1
+
+  test@3.10.0:
+    image: alpine:3.10.0

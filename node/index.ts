@@ -10,6 +10,7 @@ interface IData {
 interface IResolvedCommand {
     workdir : string
     image : string
+    dockerfile: string
     entrypoint : string
     volumes: string[]
 }
@@ -50,15 +51,17 @@ function createCmdLine(
     return commandLine
 }
 
-function exec(cmdLine : string) {
+function exec(cmdLine : string, exit : boolean) {
     var proc = cp.exec(cmdLine)
     proc.stdout.pipe(process.stdout);
     proc.stderr.pipe(process.stderr);
     process.stdin.pipe(proc.stdin);
 
-    proc.on('close', (code) => {
-        process.exit(code)
-    });
+    if(exit) {
+        proc.on('close', (code) => {
+            process.exit(code)
+        });
+    }
 }
 
 function resolveCommand(cmdName : string) : IResolvedCommand {
@@ -99,14 +102,33 @@ function determineVolumes(command : IResolvedCommand) {
 function run(explain : boolean, args) {
     var cmdName = args[0];
     args = args.slice(1);
-    var resolved = resolveCommand(cmdName)    
-    let {volumes, workdir} = determineVolumes(resolved)
-    var cmdLine = createCmdLine(resolved.image, volumes, workdir, resolved.entrypoint, args)
+    var resolved = resolveCommand(cmdName)
+
+    var buildCmd;
+    var runCmd;
+
+    if(resolved.dockerfile > '') {
+        buildCmd = `docker build -t ${cmdName} - < ${resolved.dockerfile}`
+
+        let {volumes, workdir} = determineVolumes(resolved)
+        runCmd = createCmdLine(cmdName, volumes, workdir, resolved.entrypoint, args)
+
+    } else if(resolved.image > '') {
+
+        let {volumes, workdir} = determineVolumes(resolved)
+        runCmd = createCmdLine(resolved.image, volumes, workdir, resolved.entrypoint, args)
+
+    } else {
+        console.error(`Command ${cmdName} is invalid`)
+        return;
+    }
 
     if(explain) {
-        console.info(cmdLine);
+        if(buildCmd > '') { console.info(buildCmd) }
+        if(runCmd > '') { console.info(runCmd) }
     } else {
-        exec(cmdLine);
+        if(buildCmd > '') { exec(buildCmd, false)}
+        exec(runCmd, true);
     }
 }
 
