@@ -9,6 +9,11 @@ describe('clic', () => {
         assert(stdout.match(/Hello from Docker/gi))
     })
 
+    it('captures stdin', () => {
+        var stdout = cp.execSync('echo "hello world" | clic run test cat /dev/stdin').toString()
+        assert(stdout.match(/hello world/gi))
+    })
+
     it('captures exit code', () => {
         try {
             cp.execSync('clic run test-exit-code')
