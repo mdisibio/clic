@@ -37,4 +37,14 @@ describe('clic', () => {
         cp.execSync('clic run test')
     })
 
+    it('mounts the current folder', () => {
+        var stdout = cp.execSync('clic run test ls test.js').toString()
+        assert(stdout.match(/test.js/gi))
+    })
+
+    it('mounts the parent folder', () => {
+        var stdout = cp.execSync('clic run test ls ..').toString()
+        assert(stdout.match(/test/gi))
+    })
+
 });
