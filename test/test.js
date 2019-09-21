@@ -1,14 +1,15 @@
-var assert = require('assert');
+var fs = require('fs')
+var assert = require('assert')
 var cp = require('child_process')
 
-describe('clic', function() {
+describe('clic', () => {
 
-    it('captures stdout', function() {
+    it('captures stdout', () => {
         var stdout = cp.execSync('clic run test-hello-world').toString()
         assert(stdout.match(/Hello from Docker/gi))
     })
 
-    it('captures exit code', function() {
+    it('captures exit code', () => {
         try {
             cp.execSync('clic run test-exit-code')
             assert(false, 'should not get here')
@@ -17,17 +18,23 @@ describe('clic', function() {
         }
     })
 
-    it('can unlink', function() {
+    it('can unlink', () => {
         cp.execSync('clic unlink terraform')
+        assert(fs.existsSync('/usr/local/bin/terraform') == false)
     })
 
-    it('can link', function() {
+    it('can link', () => {
         cp.execSync('clic link terraform')
+        assert(fs.existsSync('/usr/local/bin/terraform'))
     })
 
-    it('can run specific versions', function() {
+    it('can run specific versions', () => {
         var stdout = cp.execSync('clic run test@3.10.0 cat /etc/alpine-release').toString()
         assert.equal(stdout, "3.10.0\n")
+    })
+
+    it('can run without a version', () => {
+        cp.execSync('clic run terraform --version')
     })
 
 });
