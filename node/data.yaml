@@ -35,3 +35,4 @@ commands:
 
   test@3.10.0:
     image: alpine:3.10.0
+    workdir: /root
