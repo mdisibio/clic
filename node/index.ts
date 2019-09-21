@@ -108,7 +108,8 @@ function run(explain : boolean, args) {
     var runCmd;
 
     if(resolved.dockerfile > '') {
-        buildCmd = `docker build -t ${cmdName} - < ${resolved.dockerfile}`
+        var dockerFullPath = path.resolve(__dirname, resolved.dockerfile)
+        buildCmd = `docker build -t ${cmdName} - < ${dockerFullPath}`
 
         let {volumes, workdir} = determineVolumes(resolved)
         runCmd = createCmdLine(cmdName, volumes, workdir, resolved.entrypoint, args)
