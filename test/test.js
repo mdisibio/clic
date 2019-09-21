@@ -19,13 +19,13 @@ describe('clic', () => {
     })
 
     it('can unlink', () => {
-        cp.execSync('clic unlink terraform')
-        assert(fs.existsSync('/usr/local/bin/terraform') == false)
+        cp.execSync('clic unlink test-hello-world')
+        assert(fs.existsSync('/usr/local/bin/test-hello-world') == false)
     })
 
     it('can link', () => {
-        cp.execSync('clic link terraform')
-        assert(fs.existsSync('/usr/local/bin/terraform'))
+        cp.execSync('clic link test-hello-world')
+        assert(fs.existsSync('/usr/local/bin/test-hello-world'))
     })
 
     it('can run specific versions', () => {
@@ -34,7 +34,7 @@ describe('clic', () => {
     })
 
     it('can run without a version', () => {
-        cp.execSync('clic run terraform --version')
+        cp.execSync('clic run test')
     })
 
 });

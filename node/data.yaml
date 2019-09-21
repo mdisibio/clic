@@ -1,6 +1,7 @@
 aliases:
   terraform: terraform@0.12.8
   kubectl: kubectl@1.15.3
+  test: test@3.10.0
 
 commands:
 
