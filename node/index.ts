@@ -124,6 +124,11 @@ function determineEnv(command : IResolvedCommand) : Map<string,string> {
     return env;
 }
 
+function imageExists(img : string) : boolean {
+    var s = cp.execSync(`docker images -q ${img}`)
+    return s.length > 0;
+}
+
 function run(explain : boolean, args) {
     var cmdName = args[0];
     args = args.slice(1);
@@ -134,9 +139,11 @@ function run(explain : boolean, args) {
     var img;
 
     if(resolved.dockerfile > '') {
-        var dockerFullPath = path.resolve(__dirname, resolved.dockerfile)
-        buildCmd = `docker build -t ${cmdName} - < ${dockerFullPath}`
-        img = cmdName
+        img = `${cmdName}:latest`
+        if(!imageExists(img)) {
+            var dockerFullPath = path.resolve(__dirname, resolved.dockerfile)
+            buildCmd = `docker build -t ${img} - < ${dockerFullPath}`
+        }
     } else if(resolved.image > '') {
         img = resolved.image;
     } else {
