@@ -131,32 +131,29 @@ function run(explain : boolean, args) {
 
     var buildCmd;
     var runCmd;
+    var img;
 
     if(resolved.dockerfile > '') {
         var dockerFullPath = path.resolve(__dirname, resolved.dockerfile)
         buildCmd = `docker build -t ${cmdName} - < ${dockerFullPath}`
-
-        let {volumes, workdir} = determineVolumes(resolved)
-        let env = determineEnv(resolved)
-        runCmd = createCmdLine(cmdName, volumes, workdir, resolved.entrypoint, args, env)
-
+        img = cmdName
     } else if(resolved.image > '') {
-
-        let {volumes, workdir} = determineVolumes(resolved)
-        let env = determineEnv(resolved)
-        runCmd = createCmdLine(resolved.image, volumes, workdir, resolved.entrypoint, args, env)
-
+        img = resolved.image;
     } else {
         console.error(`Command ${cmdName} is invalid`)
         return;
     }
+
+    let {volumes, workdir} = determineVolumes(resolved)
+    let env = determineEnv(resolved)
+    runCmd = createCmdLine(img, volumes, workdir, resolved.entrypoint, args, env)
 
     if(explain) {
         if(buildCmd > '') { console.info(buildCmd) }
         if(runCmd > '') { console.info(runCmd) }
     } else {
         if(buildCmd > '') { exec(buildCmd, false)}
-        exec(runCmd, true);
+        if(runCmd > '') { exec(runCmd, true)}
     }
 }
 

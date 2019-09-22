@@ -52,4 +52,9 @@ describe('clic', () => {
         assert(stdout.match(/test/gi))
     })
 
+    it('runs tool with dockerfile', () => {
+        var stdout = cp.execSync('clic run nsnake --version').toString()
+        assert(stdout.match(/nsnake v3/gi))
+    })
+
 });
