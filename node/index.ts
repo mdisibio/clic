@@ -3,6 +3,7 @@ import yaml = require('js-yaml');
 import cp = require('child_process');
 import path = require('path');
 
+
 interface IData {
     aliases: Map<string, string>
     commands: Map<string, IResolvedCommand>
@@ -29,6 +30,10 @@ function createCmdLine(
 {
     var commandLine = "docker run -i";
 
+    if(process.stdin.isTTY || process.stdout.isTTY) {
+        commandLine += "t"
+    }
+
     volumes = volumes || []
     volumes.forEach(v => {
         commandLine += " -v " + v
@@ -52,15 +57,18 @@ function createCmdLine(
 }
 
 function exec(cmdLine : string, exit : boolean) {
-    var proc = cp.exec(cmdLine)
-    proc.stdout.pipe(process.stdout);
-    proc.stderr.pipe(process.stderr);
-    process.stdin.pipe(proc.stdin);
+    var code = 0;
+
+    try {
+        cp.execSync(cmdLine, {
+            stdio: "inherit"
+        })
+    } catch(error) {
+        code = error.status
+    }
 
     if(exit) {
-        proc.on('close', (code) => {
-            process.exit(code)
-        });
+        process.exit(code)
     }
 }
 
