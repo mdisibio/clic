@@ -14,6 +14,7 @@ interface IResolvedCommand {
     dockerfile: string
     entrypoint : string
     volumes: string[]
+    fixttydims: boolean
 }
 
 function loadData() : IData {
@@ -26,7 +27,8 @@ function createCmdLine(
     volumes: any[], 
     workdir: string, 
     entrypoint: string,
-    args: string[]) 
+    args: string[],
+    env: Map<string,string>) 
 {
     var commandLine = "docker run -i";
 
@@ -46,6 +48,10 @@ function createCmdLine(
     if(entrypoint > '') {
         commandLine += " --entrypoint " + entrypoint
     }
+
+    env.forEach((v,k) => {
+        commandLine += ` -e ${k}="${v}"`
+    })
 
     commandLine += " " + image
 
@@ -103,8 +109,19 @@ function determineVolumes(command : IResolvedCommand) {
 
     return {
         volumes: volumes,
-        workdir: finalWorkDir
+        workdir: finalWorkDir 
     }
+}
+
+function determineEnv(command : IResolvedCommand) : Map<string,string> {
+    var env = new Map<string,string>()
+
+    if(command.fixttydims) {
+        env.set('COLUMNS', '`tput cols`')
+        env.set('LINES', '`tput lines`')
+    }
+
+    return env;
 }
 
 function run(explain : boolean, args) {
@@ -120,12 +137,14 @@ function run(explain : boolean, args) {
         buildCmd = `docker build -t ${cmdName} - < ${dockerFullPath}`
 
         let {volumes, workdir} = determineVolumes(resolved)
-        runCmd = createCmdLine(cmdName, volumes, workdir, resolved.entrypoint, args)
+        let env = determineEnv(resolved)
+        runCmd = createCmdLine(cmdName, volumes, workdir, resolved.entrypoint, args, env)
 
     } else if(resolved.image > '') {
 
         let {volumes, workdir} = determineVolumes(resolved)
-        runCmd = createCmdLine(resolved.image, volumes, workdir, resolved.entrypoint, args)
+        let env = determineEnv(resolved)
+        runCmd = createCmdLine(resolved.image, volumes, workdir, resolved.entrypoint, args, env)
 
     } else {
         console.error(`Command ${cmdName} is invalid`)

@@ -26,6 +26,7 @@ commands:
   nsnake:
     dockerfile: Dockerfile.nsnake
     entrypoint: /usr/games/nsnake
+    fixttydims: true
 
   test-hello-world:
     image: hello-world
