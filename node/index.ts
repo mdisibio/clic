@@ -85,7 +85,7 @@ function resolveCommand(cmdName : string) : IResolvedCommand {
         data.commands[data.aliases[cmdName]] || data.commands[cmdName];
 
     if(resolved == null) {
-        console.error('Unknown command: ' + cmdName);
+        console.error('clic: Unknown command: ' + cmdName);
         process.exit(-1)
     }
 
@@ -94,6 +94,18 @@ function resolveCommand(cmdName : string) : IResolvedCommand {
 
 function getUserHome() {
     return process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
+}
+
+function getClicHome() {
+    return getUserHome() + path.sep + '.clic'
+}
+
+function getClic() {
+    return __dirname + '/clic.sh'
+}
+
+function getClicBin() {
+    return getClicHome() + path.sep + 'bin'
 }
 
 function determineVolumes(command : IResolvedCommand) {
@@ -165,8 +177,10 @@ function run(explain : boolean, args) {
 }
 
 function link(linkName : string) {
-    var clic = path.join(__dirname, 'clic.sh')
-    var link = path.join('/usr/local/bin', linkName)
+    resolveCommand(linkName)
+
+    var clic = getClic();
+    var link = path.join(getClicBin(), linkName)
 
     if(fs.existsSync(link)) {
         fs.unlinkSync(link)
@@ -177,7 +191,7 @@ function link(linkName : string) {
 }
 
 function unlink(linkName : string) {
-    var link = path.join('/usr/local/bin', linkName)
+    var link = path.join(getClicBin(), linkName)
     if(fs.existsSync(link)) {
         fs.unlinkSync(link)
         console.info(`${link} unlinked`)
@@ -186,9 +200,44 @@ function unlink(linkName : string) {
     }
 }
 
+function installClic() {
+    console.info('Setting up clic home folder')
+    var home = getClicHome()
+    if(!fs.existsSync(home)) {
+        fs.mkdirSync(home)
+        console.info(`...Created ${home}`)
+    } else {
+        console.info(`...Already exists`)
+    }
+
+    console.info('Setting up clic bin folder')
+    var bin = getClicBin()
+    if(!fs.existsSync(bin)) {
+        fs.mkdirSync(bin)
+        console.info(`...Created ${bin}`)
+    } else {
+        console.info(`...Already exists`)
+    }
+
+    // Add folders to the path
+    let bash_profile = getUserHome() + path.sep + '.bash_profile'
+    if(fs.existsSync(bash_profile)) {
+        var content = fs.readFileSync(bash_profile, 'utf-8');
+        if(content.search(bin) == -1) {
+            console.info(`Adding clic bin path to ${bash_profile}`)
+            let line = `export PATH="$PATH:${bin}"\n`
+            fs.appendFileSync(bash_profile, line);
+        } else {
+            console.info(`Clic bin path already present in ${bash_profile}`)
+        }
+    }
+}
+
 function install(cmdName : string) {
-    if(cmdName == 'clic') {
-        link('clic')
+    if(cmdName == 'clic' || cmdName == '' || cmdName == undefined) {
+        installClic()
+    } else {
+        console.warn(`Unsupported install for command: ${cmdName}`)
     }
 }
 
@@ -220,4 +269,3 @@ switch(command) {
     default:
         console.log("Usage: clic run <cmd@...> <args>")
 }
-
