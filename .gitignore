@@ -1,3 +1,4 @@
 **/node_modules
 node/*.js
+node/*.js.map
 **/package-lock.json
