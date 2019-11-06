@@ -1,44 +1,34 @@
 aliases:
-  terraform: terraform@0.11.13
   kubectl: kubectl@1.15.3
   test: test@3.10.0
   certbot: certbot@0.39.0
-
+  terraform: terraform@0.12.8
 commands:
-
   certbot@0.39.0:
-    image: certbot/certbot:v0.39.0
+    image: 'certbot/certbot:v0.39.0'
     workdir: /root
-
   kubectl@1.15.3:
-    image: lachlanevenson/k8s-kubectl:v1.15.3
-
+    image: 'lachlanevenson/k8s-kubectl:v1.15.3'
   terraform@0.12.8:
-    image: hashicorp/terraform:0.12.8
+    image: 'hashicorp/terraform:0.12.8'
     workdir: /root
-
   terraform@0.11.13:
-    image: hashicorp/terraform:0.11.13
+    image: 'hashicorp/terraform:0.11.13'
     workdir: /root
-  
   awslogs:
     image: alpine/awslogs
     workdir: /root
     entrypoint: /usr/local/bin/awslogs
     volumes:
-      - ${USERPROFILE-~}/.aws:/root/.aws:ro
-
+      - '${USERPROFILE-~}/.aws:/root/.aws:ro'
   nsnake:
     dockerfile: Dockerfile.nsnake
     entrypoint: /usr/games/nsnake
     fixttydims: true
-
   test-hello-world:
     image: hello-world
-
   test-exit-code:
     image: ryanbrainard/exit-1
-
   test@3.10.0:
-    image: alpine:3.10.0
+    image: 'alpine:3.10.0'
     workdir: /root

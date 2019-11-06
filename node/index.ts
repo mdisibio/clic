@@ -22,6 +22,10 @@ function loadData() : IData {
     return data;
 }
 
+function writeData(data : IData) {
+    fs.writeFileSync(__dirname + '/data.yaml', yaml.safeDump(data))
+}
+
 function createCmdLine(
     image: string, 
     volumes: any[], 
@@ -187,7 +191,7 @@ function link(linkName : string) {
     }
     fs.symlinkSync(clic, link)
 
-    console.info(`Command ${linkName} linked as ${link}`)
+    console.info(`Created link: ${link}`)
 }
 
 function unlink(linkName : string) {
@@ -200,36 +204,38 @@ function unlink(linkName : string) {
     }
 }
 
+function pin(unversioned : string, versioned : string) { 
+    var data = loadData();
+
+    data.aliases[unversioned] = versioned
+    writeData(data)
+
+    console.log(`Pinned ${unversioned} -> ${versioned}`)
+}
+
 function installClic() {
-    console.info('Setting up clic home folder')
     var home = getClicHome()
     if(!fs.existsSync(home)) {
         fs.mkdirSync(home)
         console.info(`...Created ${home}`)
-    } else {
-        console.info(`...Already exists`)
     }
+    console.log(`✓ clic home created: ${home}`)
 
-    console.info('Setting up clic bin folder')
     var bin = getClicBin()
     if(!fs.existsSync(bin)) {
         fs.mkdirSync(bin)
-        console.info(`...Created ${bin}`)
-    } else {
-        console.info(`...Already exists`)
     }
+    console.log(`✓ clic bin created: ${bin}`)
 
     // Add folders to the path
     let bash_profile = getUserHome() + path.sep + '.bash_profile'
     if(fs.existsSync(bash_profile)) {
         var content = fs.readFileSync(bash_profile, 'utf-8');
         if(content.search(bin) == -1) {
-            console.info(`Adding clic bin path to ${bash_profile}`)
             let line = `export PATH="$PATH:${bin}"\n`
             fs.appendFileSync(bash_profile, line);
-        } else {
-            console.info(`Clic bin path already present in ${bash_profile}`)
         }
+        console.log(`✓ clic bin added to ${bash_profile}`)
     }
 }
 
@@ -237,7 +243,52 @@ function install(cmdName : string) {
     if(cmdName == 'clic' || cmdName == '' || cmdName == undefined) {
         installClic()
     } else {
-        console.warn(`Unsupported install for command: ${cmdName}`)
+        var data = loadData()
+
+        var parts = cmdName.split("@");
+        switch(parts.length) {
+            case 1: {
+                // clic install cmd
+                // Find highest version
+                console.log(`Installing latest version of: ${parts[0]}`)
+                
+                var max = Object.keys(data.commands)
+                    .filter(c => c.startsWith(parts[0] + "@"))
+                    .sort((a, b) => a > b ? -1 : 1)
+                    [0];
+
+                pin(parts[0], max)
+                link(parts[0])
+                link(max)
+            }
+            break;
+
+            case 2: {
+                // clic install cmd@ver
+                var currentAlias = data.aliases[parts[0]]
+                if(currentAlias > '') {
+                    let aliasParts = currentAlias.split('@')
+                    if(aliasParts.length == 2) {
+                        if(parts[1] >= aliasParts[1]) {
+                            console.log(`Updating previously pinned version ${aliasParts[1]} to ${parts[1]}`)
+                            pin(parts[0], cmdName)
+                            link(parts[0])
+                        } else {
+                            console.log(`Command '${parts[0]}' already aliased to a higher version ${aliasParts[1]}. Not changing alias`)
+                        }
+                    }
+                } else {
+                    pin(parts[0], cmdName)
+                    link(parts[0])
+                }
+
+                link(cmdName)
+            }
+            break;
+
+            default:
+                throw new Error("Unrecognized command name: " + cmdName)
+        }
     }
 }
 
@@ -267,5 +318,9 @@ switch(command) {
         break;
 
     default:
-        console.log("Usage: clic run <cmd@...> <args>")
+        console.log("Usage: ")
+        console.log("  clic run <cmd@...> <args>")
+        console.log("")
+        console.log("  clic install")
+        console.log("  clic install cmd<@...>")
 }
