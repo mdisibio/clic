@@ -17,6 +17,23 @@ interface IResolvedCommand {
     fixttydims: boolean
 }
 
+class Command {
+    name : string
+    version? : string
+
+    constructor(s : string) {
+        var parts = s.split("@");
+        this.name = parts[0]
+        if(parts.length > 1) {
+            this.version = parts[1]
+        }
+    }
+
+    toString() : string {
+        return this.name + this.version ? `@${this.version}` : ''
+    }
+}
+
 function loadData() : IData {
     var data = yaml.safeLoad(fs.readFileSync(__dirname + '/data.yaml', 'utf8'))
     return data;
@@ -245,49 +262,40 @@ function install(cmdName : string) {
     } else {
         var data = loadData()
 
-        var parts = cmdName.split("@");
-        switch(parts.length) {
-            case 1: {
-                // clic install cmd
-                // Find highest version
-                console.log(`Installing latest version of: ${parts[0]}`)
-                
-                var max = Object.keys(data.commands)
-                    .filter(c => c.startsWith(parts[0] + "@"))
-                    .sort((a, b) => a > b ? -1 : 1)
-                    [0];
-
-                pin(parts[0], max)
-                link(parts[0])
-                link(max)
-            }
-            break;
-
-            case 2: {
-                // clic install cmd@ver
-                var currentAlias = data.aliases[parts[0]]
-                if(currentAlias > '') {
-                    let aliasParts = currentAlias.split('@')
-                    if(aliasParts.length == 2) {
-                        if(parts[1] >= aliasParts[1]) {
-                            console.log(`Updating previously pinned version ${aliasParts[1]} to ${parts[1]}`)
-                            pin(parts[0], cmdName)
-                            link(parts[0])
-                        } else {
-                            console.log(`Command '${parts[0]}' already aliased to a higher version ${aliasParts[1]}. Not changing alias`)
-                        }
+        var cmd = new Command(cmdName)
+        if(cmd.version) {
+            // clic install cmd@ver
+            var currentAlias = data.aliases[cmd.name]
+            if(currentAlias > '') {
+                let aliasParts = currentAlias.split('@')
+                if(aliasParts.length == 2) {
+                    if(cmd.version >= aliasParts[1]) {
+                        console.log(`Updating previously pinned version ${aliasParts[1]} to ${cmd.version}`)
+                        pin(cmd.name, cmdName)
+                        link(cmd.name)
+                    } else {
+                        console.log(`Command '${cmd.name}' already aliased to a higher version ${aliasParts[1]}. Not changing alias`)
                     }
-                } else {
-                    pin(parts[0], cmdName)
-                    link(parts[0])
                 }
-
-                link(cmdName)
+            } else {
+                pin(cmd.name, cmdName)
+                link(cmd.name)
             }
-            break;
 
-            default:
-                throw new Error("Unrecognized command name: " + cmdName)
+            link(cmdName)
+        } else {
+            // clic install cmd
+            // Find highest version
+            console.log(`Installing latest version of: ${cmd.name}`)
+            
+            var max = Object.keys(data.commands)
+                .filter(c => c.startsWith(cmd.name + "@"))
+                .sort((a, b) => a > b ? -1 : 1)
+                [0];
+
+            pin(cmd.name, max)
+            link(cmd.name)
+            link(max)
         }
     }
 }

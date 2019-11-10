@@ -15,14 +15,29 @@ function getClicBin(cmdName) {
     return getClicHome() + path.sep + 'bin' + path.sep + cmdName
 }
 
-describe('clic install', () => {
+describe('clic install', function() {
+    this.timeout(5000)
+
     it('can install', () => {
         cp.execSync('clic install')
     })
+
+    it('can install cmd', () => {
+        cp.execSync('clic install terraform')
+        var stdout = cp.execSync(getClicBin('terraform') + ' --version').toString()
+        assert(stdout.match(/Terraform v0.12.8/gi))
+    })
+
+    it('can install cmd@vers', () => {
+        cp.execSync('clic install terraform@0.11.13')
+        var stdout = cp.execSync(getClicBin('terraform@0.11.13') + ' --version').toString()
+        assert(stdout.match(/Terraform v0.11.13/gi))
+    })
 })
 
-describe('clic link', () => {
-
+describe('clic link', function() {
+    this.timeout(5000)
+    
     it('can unlink', () => {
         cp.execSync('clic unlink test-hello-world')
         assert(fs.existsSync(getClicBin('test-hello-world')) == false)
