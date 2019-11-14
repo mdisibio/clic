@@ -5,8 +5,8 @@ import path = require('path');
 
 
 interface IData {
-    aliases: Map<string, string>
-    commands: Map<string, IResolvedCommand>
+    aliases: object
+    commands: object
 }
 interface IResolvedCommand {
     workdir : string
@@ -15,6 +15,25 @@ interface IResolvedCommand {
     entrypoint : string
     volumes: string[]
     fixttydims: boolean
+}
+
+function deleteAlias(aliases : object, cmdToDelete : Command) : boolean {
+    var dirty = false;
+
+    for(var alias of Object.keys(aliases)) {
+        if(
+            // delete "cmd"
+            (cmdToDelete.version == undefined && alias == cmdToDelete.name) || 
+            // delete "cmd@vers"
+            aliases[alias] == cmdToDelete.toString()) {
+
+            delete aliases[alias]
+            console.log(`✓ Unpinned alias '${alias}'`)
+            dirty = true;
+        }
+    }
+
+    return dirty;
 }
 
 class Command {
@@ -208,16 +227,16 @@ function link(linkName : string) {
     }
     fs.symlinkSync(clic, link)
 
-    console.info(`Created link: ${link}`)
+    console.info(`✓ Created symlink: ${link}`)
 }
 
 function unlink(linkName : string) {
     var link = path.join(getClicBin(), linkName)
     if(fs.existsSync(link)) {
         fs.unlinkSync(link)
-        console.info(`${link} unlinked`)
+        console.info(`✓ Deleted symlink ${link}`)
     } else {
-        console.info(`Command ${linkName} not linked`)
+        console.info(`✓ Symlink ${link} already removed`)
     }
 }
 
@@ -227,7 +246,17 @@ function pin(unversioned : string, versioned : string) {
     data.aliases[unversioned] = versioned
     writeData(data)
 
-    console.log(`Pinned ${unversioned} -> ${versioned}`)
+    console.log(`✓ Pinned alias '${unversioned}' -> ${versioned}`)
+}
+
+function unpin(cmd : Command) {
+    var data = loadData();
+    
+    let dirty = deleteAlias(data.aliases, cmd)
+
+    if(dirty) {
+        writeData(data)
+    }
 }
 
 function installClic() {
@@ -286,17 +315,32 @@ function install(cmdName : string) {
         } else {
             // clic install cmd
             // Find highest version
-            console.log(`Installing latest version of: ${cmd.name}`)
             
             var max = Object.keys(data.commands)
                 .filter(c => c.startsWith(cmd.name + "@"))
                 .sort((a, b) => a > b ? -1 : 1)
                 [0];
 
+            console.log(`Installing latest version: ${max}`)
+
             pin(cmd.name, max)
             link(cmd.name)
             link(max)
         }
+    }
+}
+
+function uninstall(text : string) {
+    var data = loadData()
+    var cmd = new Command(text)
+
+    let addUnlink = data.aliases[cmd.name];
+
+    unpin(cmd)
+    unlink(text)
+
+    if(addUnlink) {
+        unlink(addUnlink)
     }
 }
 
@@ -307,6 +351,10 @@ args = args.slice(1)
 switch(command) {
     case 'install':
         install(args[0])
+        break;
+
+    case 'uninstall':
+        uninstall(args[0])
         break;
 
     case 'link':

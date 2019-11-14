@@ -16,7 +16,7 @@ function getClicBin(cmdName) {
 }
 
 describe('clic install', function() {
-    this.timeout(5000)
+    this.timeout(10000)
 
     it('can install', () => {
         cp.execSync('clic install')
@@ -32,6 +32,17 @@ describe('clic install', function() {
         cp.execSync('clic install terraform@0.11.13')
         var stdout = cp.execSync(getClicBin('terraform@0.11.13') + ' --version').toString()
         assert(stdout.match(/Terraform v0.11.13/gi))
+    })
+
+    it('can uninstall cmd', () => {
+        cp.execSync('clic uninstall terraform')
+        assert(fs.existsSync(getClicBin('terraform')) == false)
+        assert(fs.existsSync(getClicBin('terraform@0.12.8')) == false)
+    })
+
+    it('can uninstall cmd@vers', () => {
+        cp.execSync('clic uninstall terraform@0.11.13')
+        assert(fs.existsSync(getClicBin('terraform@0.11.13')) == false)
     })
 })
 
