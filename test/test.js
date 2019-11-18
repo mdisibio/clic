@@ -11,8 +11,16 @@ function getClicHome() {
     return getUserHome() + path.sep + '.clic'
 }
 
-function getClicBin(cmdName) {
+function getBin(cmdName) {
     return getClicHome() + path.sep + 'bin' + path.sep + cmdName
+}
+
+function assertBinExists(cmdName) {
+    assert(fs.existsSync(getBin(cmdName)))
+}
+
+function assertBinDoesNotExist(cmdName) {
+    assert(fs.existsSync(getBin(cmdName)) == false)
 }
 
 describe('clic install', function() {
@@ -24,25 +32,25 @@ describe('clic install', function() {
 
     it('can install cmd', () => {
         cp.execSync('clic install terraform')
-        var stdout = cp.execSync(getClicBin('terraform') + ' --version').toString()
+        var stdout = cp.execSync(getBin('terraform') + ' --version').toString()
         assert(stdout.match(/Terraform v0.12.8/gi))
     })
 
     it('can install cmd@vers', () => {
         cp.execSync('clic install terraform@0.11.13')
-        var stdout = cp.execSync(getClicBin('terraform@0.11.13') + ' --version').toString()
+        var stdout = cp.execSync(getBin('terraform@0.11.13') + ' --version').toString()
         assert(stdout.match(/Terraform v0.11.13/gi))
     })
 
     it('can uninstall cmd', () => {
         cp.execSync('clic uninstall terraform')
-        assert(fs.existsSync(getClicBin('terraform')) == false)
-        assert(fs.existsSync(getClicBin('terraform@0.12.8')) == false)
+        assertBinDoesNotExist('terraform')
+        assertBinDoesNotExist('terraform@0.12.8')
     })
 
     it('can uninstall cmd@vers', () => {
         cp.execSync('clic uninstall terraform@0.11.13')
-        assert(fs.existsSync(getClicBin('terraform@0.11.13')) == false)
+        assertBinDoesNotExist('terraform@0.11.13')
     })
 
     it('automatically aliases when there isnt one', () => {
@@ -50,7 +58,7 @@ describe('clic install', function() {
         cp.execSync('clic uninstall terraform@0.11.13')
 
         cp.execSync('clic install terraform')
-        assert(fs.existsSync(getClicBin('terraform')))
+        assertBinExists('terraform')
     })
 
     it('upgrades alias when installing a higher version', () => {
@@ -60,7 +68,7 @@ describe('clic install', function() {
         cp.execSync('clic install terraform@0.11.13')
         cp.execSync('clic install terraform')
 
-        var stdout = cp.execSync(getClicBin('terraform') + ' --version').toString()
+        var stdout = cp.execSync(getBin('terraform') + ' --version').toString()
         assert(stdout.match(/Terraform v0.12.8/gi))
     })
 })
@@ -70,12 +78,12 @@ describe('clic link', function() {
     
     it('can unlink', () => {
         cp.execSync('clic unlink test-hello-world')
-        assert(fs.existsSync(getClicBin('test-hello-world')) == false)
+        assertBinDoesNotExist('test-hello-world')
     })
 
     it('can link', () => {
         cp.execSync('clic link test-hello-world')
-        assert(fs.existsSync(getClicBin('test-hello-world')))
+        assertBinExists('test-hello-world')
     })
 
     it('doesn\'t link unknown command', () => {
