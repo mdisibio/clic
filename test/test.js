@@ -44,6 +44,25 @@ describe('clic install', function() {
         cp.execSync('clic uninstall terraform@0.11.13')
         assert(fs.existsSync(getClicBin('terraform@0.11.13')) == false)
     })
+
+    it('automatically aliases when there isnt one', () => {
+        cp.execSync('clic uninstall terraform')
+        cp.execSync('clic uninstall terraform@0.11.13')
+
+        cp.execSync('clic install terraform')
+        assert(fs.existsSync(getClicBin('terraform')))
+    })
+
+    it('upgrades alias when installing a higher version', () => {
+        cp.execSync('clic uninstall terraform')
+        cp.execSync('clic uninstall terraform@0.11.13')
+
+        cp.execSync('clic install terraform@0.11.13')
+        cp.execSync('clic install terraform')
+
+        var stdout = cp.execSync(getClicBin('terraform') + ' --version').toString()
+        assert(stdout.match(/Terraform v0.12.8/gi))
+    })
 })
 
 describe('clic link', function() {
