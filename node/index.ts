@@ -49,7 +49,7 @@ class Command {
     }
 
     toString() : string {
-        return this.name + this.version ? `@${this.version}` : ''
+        return this.name + (this.version ? `@${this.version}` : '')
     }
 }
 
@@ -240,13 +240,13 @@ function unlink(linkName : string) {
     }
 }
 
-function pin(unversioned : string, versioned : string) { 
+function pin(aliasName : string, cmd : Command) { 
     var data = loadData();
 
-    data.aliases[unversioned] = versioned
+    data.aliases[aliasName] = cmd.toString()
     writeData(data)
 
-    console.log(`✓ Pinned alias '${unversioned}' -> ${versioned}`)
+    console.log(`✓ Pinned alias '${aliasName}' -> ${cmd.toString()}`)
 }
 
 function unpin(cmd : Command) {
@@ -296,18 +296,19 @@ function install(cmdName : string) {
             // clic install cmd@ver
             var currentAlias = data.aliases[cmd.name]
             if(currentAlias > '') {
-                let aliasParts = currentAlias.split('@')
-                if(aliasParts.length == 2) {
-                    if(cmd.version >= aliasParts[1]) {
-                        console.log(`Updating previously pinned version ${aliasParts[1]} to ${cmd.version}`)
-                        pin(cmd.name, cmdName)
+                let alias = new Command(currentAlias)
+                if(alias.version > '') {
+                    if(cmd.version >= alias.version) {
+                        console.log(`Updating previously pinned version ${alias.version} to ${cmd.version}`)
+                        pin(cmd.name, cmd)
                         link(cmd.name)
                     } else {
-                        console.log(`Command '${cmd.name}' already aliased to a higher version ${aliasParts[1]}. Not changing alias`)
+                        console.log(`Command '${cmd.name}' already aliased to a higher version ${alias.version}. Not changing alias`)
                     }
                 }
             } else {
-                pin(cmd.name, cmdName)
+                // Not aliases already, so just pin it.
+                pin(cmd.name, cmd)
                 link(cmd.name)
             }
 
@@ -316,16 +317,16 @@ function install(cmdName : string) {
             // clic install cmd
             // Find highest version
             
-            var max = Object.keys(data.commands)
+            var max = new Command(Object.keys(data.commands)
                 .filter(c => c.startsWith(cmd.name + "@"))
                 .sort((a, b) => a > b ? -1 : 1)
-                [0];
+                [0]);
 
-            console.log(`Installing latest version: ${max}`)
+            console.log(`Installing latest version: ${max.toString()}`)
 
             pin(cmd.name, max)
             link(cmd.name)
-            link(max)
+            link(max.toString())
         }
     }
 }
