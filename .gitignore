@@ -1,4 +1,5 @@
 **/node_modules
+**/.vscode
 node/*.js
 node/*.js.map
 **/package-lock.json
