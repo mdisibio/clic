@@ -53,6 +53,11 @@ describe('clic install', function() {
         assertBinDoesNotExist('terraform@0.11.13')
     })
 
+    it('can run installed command', () => {
+        cp.execSync('clic install test-hello-world')
+        cp.execSync('test-hello-world')
+    })
+
     it('automatically aliases when there isnt one', () => {
         cp.execSync('clic uninstall terraform')
         cp.execSync('clic uninstall terraform@0.11.13')
@@ -94,27 +99,26 @@ describe('clic link', function() {
             assert.equal(error.status, 255)
         }
     })
-
-    it('can run linked command', () => {
-        cp.execSync('test-hello-world')
-    })
 })
 
 describe('clic run', function() {
     this.timeout(5000)
 
     it('captures stdout', () => {
+        cp.execSync('clic install test-hello-world')
         var stdout = cp.execSync('clic run test-hello-world').toString()
         assert(stdout.match(/Hello from Docker/gi))
     })
 
     it('captures stdin', () => {
+        cp.execSync('clic install test')
         var stdout = cp.execSync('echo "hello world" | clic run test cat /dev/stdin').toString()
         assert(stdout.match(/hello world/gi))
     })
 
     it('captures exit code', () => {
         try {
+            cp.execSync('clic install test-exit-code')
             cp.execSync('clic run test-exit-code')
             assert(false, 'should not get here')
         } catch(error) {
@@ -128,6 +132,7 @@ describe('clic run', function() {
     })
 
     it('can run without a version', () => {
+        cp.execSync('clic install test')
         cp.execSync('clic run test')
     })
 
@@ -142,6 +147,7 @@ describe('clic run', function() {
     })
 
     it('runs tool with dockerfile', () => {
+        cp.execSync('clic install nsnake')
         var stdout = cp.execSync('clic run nsnake --version').toString()
         assert(stdout.match(/nsnake v3/gi))
     })
