@@ -99,11 +99,6 @@ class Data {
         var resolved : IResolvedCommand = 
             this.data.commands[this.data.aliases[cmdName]] || this.data.commands[cmdName];
     
-        /*if(resolved == null) {
-            console.error('clic: Unknown command: ' + cmdName);
-            process.exit(-1)
-        }*/
-    
         return resolved;
     }
 
@@ -141,25 +136,6 @@ class Data {
     }
 }
 
-/*function deleteAlias(aliases : object, cmdToDelete : Command) : boolean {
-    var dirty = false;
-
-    for(var alias of Object.keys(aliases)) {
-        if(
-            // delete "cmd"
-            (cmdToDelete.version == undefined && alias == cmdToDelete.name) || 
-            // delete "cmd@vers"
-            aliases[alias] == cmdToDelete.toString()) {
-
-            delete aliases[alias]
-            console.log(`✓ Unpinned alias '${alias}'`)
-            dirty = true;
-        }
-    }
-
-    return dirty;
-}*/
-
 class Command {
     name : string
     version? : string
@@ -176,16 +152,6 @@ class Command {
         return this.name + (this.version ? `@${this.version}` : '')
     }
 }
-
-/*function loadData() : IData {
-    var data = yaml.safeLoad(fs.readFileSync(__dirname + '/data.yaml', 'utf8'))
-    return data;
-}*/
-
-/*
-function writeData(data : IData) {
-    fs.writeFileSync(__dirname + '/data.yaml', yaml.safeDump(data))
-}*/
 
 function createCmdLine(
     image: string, 
@@ -242,21 +208,6 @@ function exec(cmdLine : string, exit : boolean) {
         process.exit(code)
     }
 }
-
-/*
-function resolveCommand(cmdName : string) : IResolvedCommand {
-    var data = loadData()
-
-    var resolved : IResolvedCommand = 
-        data.commands[data.aliases[cmdName]] || data.commands[cmdName];
-
-    if(resolved == null) {
-        console.error('clic: Unknown command: ' + cmdName);
-        process.exit(-1)
-    }
-
-    return resolved;
-}*/
 
 function getUserHome() {
     return process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
@@ -349,7 +300,6 @@ function run(explain : boolean, args) {
 }
 
 function link(linkName : string) {
-    //resolveCommand(linkName)
     let cmd = new Command(linkName)
     let repo = new Repo()
     let resolved = repo.resolveCommand(cmd) || repo.getHighest(cmd)
@@ -378,25 +328,6 @@ function unlink(linkName : string) {
         console.info(`✓ Symlink ${link} already removed`)
     }
 }
-
-/*function pin(aliasName : string, cmd : Command) { 
-    var data = loadData();
-
-    data.aliases[aliasName] = cmd.toString()
-    writeData(data)
-
-    console.log(`✓ Pinned alias '${aliasName}' -> ${cmd.toString()}`)
-}
-
-function unpin(cmd : Command) {
-    var data = loadData();
-    
-    let dirty = deleteAlias(data.aliases, cmd)
-
-    if(dirty) {
-        writeData(data)
-    }
-}*/
 
 function installClic() {
     var home = getClicHome()
