@@ -1,4 +1,7 @@
 commands:
+  alpine@3.10.0:
+    image: 'alpine:3.10.0'
+    workdir: /root
   certbot@0.39.0:
     image: 'certbot/certbot:v0.39.0'
     workdir: /root
@@ -20,10 +23,5 @@ commands:
     dockerfile: Dockerfile.nsnake
     entrypoint: /usr/games/nsnake
     fixttydims: true
-  test-hello-world:
+  hello-world:
     image: hello-world
-  test-exit-code:
-    image: ryanbrainard/exit-1
-  test@3.10.0:
-    image: 'alpine:3.10.0'
-    workdir: /root

@@ -1,11 +1,18 @@
 aliases:
+  alpine: alpine@3.10.0
   certbot: certbot@0.39.0
+  hello-world: hello-world
   nsnake: nsnake
   terraform: terraform@0.12.8
   test: test@3.10.0
   test-exit-code: test-exit-code
   test-hello-world: test-hello-world
 commands:
+  alpine@3.10.0:
+    image: 'alpine:3.10.0'
+    workdir: /root
+  hello-world:
+    image: hello-world
   nsnake:
     dockerfile: Dockerfile.nsnake
     entrypoint: /usr/games/nsnake

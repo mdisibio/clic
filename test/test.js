@@ -54,8 +54,8 @@ describe('clic install', function() {
     })
 
     it('can run installed command', () => {
-        cp.execSync('clic install test-hello-world')
-        cp.execSync('test-hello-world')
+        cp.execSync('clic install hello-world')
+        cp.execSync('hello-world')
     })
 
     it('automatically aliases when there isnt one', () => {
@@ -82,13 +82,13 @@ describe('clic link', function() {
     this.timeout(5000)
     
     it('can unlink', () => {
-        cp.execSync('clic unlink test-hello-world')
-        assertBinDoesNotExist('test-hello-world')
+        cp.execSync('clic unlink hello-world')
+        assertBinDoesNotExist('hello-world')
     })
 
     it('can link', () => {
-        cp.execSync('clic link test-hello-world')
-        assertBinExists('test-hello-world')
+        cp.execSync('clic link hello-world')
+        assertBinExists('hello-world')
     })
 
     it('doesn\'t link unknown command', () => {
@@ -105,21 +105,21 @@ describe('clic run', function() {
     this.timeout(5000)
 
     it('captures stdout', () => {
-        cp.execSync('clic install test-hello-world')
-        var stdout = cp.execSync('clic run test-hello-world').toString()
+        cp.execSync('clic install hello-world')
+        var stdout = cp.execSync('clic run hello-world').toString()
         assert(stdout.match(/Hello from Docker/gi))
     })
 
     it('captures stdin', () => {
-        cp.execSync('clic install test')
-        var stdout = cp.execSync('echo "hello world" | clic run test cat /dev/stdin').toString()
+        cp.execSync('clic install alpine')
+        var stdout = cp.execSync('echo "hello world" | clic run alpine cat /dev/stdin').toString()
         assert(stdout.match(/hello world/gi))
     })
 
     it('captures exit code', () => {
         try {
-            cp.execSync('clic install test-exit-code')
-            cp.execSync('clic run test-exit-code')
+            cp.execSync('clic install alpine')
+            cp.execSync('clic run alpine false')
             assert(false, 'should not get here')
         } catch(error) {
             assert.equal(error.status, 1)
@@ -127,22 +127,22 @@ describe('clic run', function() {
     })
 
     it('can run specific versions', () => {
-        var stdout = cp.execSync('clic run test@3.10.0 cat /etc/alpine-release').toString()
+        var stdout = cp.execSync('clic run alpine@3.10.0 cat /etc/alpine-release').toString()
         assert.equal(stdout, "3.10.0\n")
     })
 
     it('can run without a version', () => {
-        cp.execSync('clic install test')
-        cp.execSync('clic run test')
+        cp.execSync('clic install alpine')
+        cp.execSync('clic run alpine')
     })
 
     it('mounts the current folder', () => {
-        var stdout = cp.execSync('clic run test ls test.js').toString()
+        var stdout = cp.execSync('clic run alpine ls test.js').toString()
         assert(stdout.match(/test.js/gi))
     })
 
     it('mounts the parent folder', () => {
-        var stdout = cp.execSync('clic run test ls ..').toString()
+        var stdout = cp.execSync('clic run alpine ls ..').toString()
         assert(stdout.match(/test/gi))
     })
 
