@@ -2,6 +2,7 @@ import fs = require('fs');
 import yaml = require('js-yaml');
 import cp = require('child_process');
 import path = require('path');
+import { listenerCount } from 'cluster';
 
 interface IResolvedCommand {
     workdir : string
@@ -51,6 +52,10 @@ class Data {
 
     get aliases() {
         return this.data.aliases
+    }
+
+    get commands() {
+        return this.data.commands
     }
 
     load() {
@@ -407,7 +412,9 @@ function install(cmdName : string) {
 
             data.pin(cmd.name, highest)
             link(cmd.name)
-            link(highest.toString())
+            if(cmd.name != highest.toString()) {
+                link(highest.toString())
+            }
             data.installCommand(highest, repoCmd)
         }
     }
@@ -417,15 +424,81 @@ function uninstall(text : string) {
     var data = new Data()
     var cmd = new Command(text)
 
-    let addUnlink = data.aliases[cmd.name];
+    if(cmd.version) {
+        // Uninstall specific version
+        console.info(`Uninstalling: ${cmd.toString()}`)
 
-    data.unpin(cmd)
-    data.uninstallCommand(cmd)
-    unlink(text)
+        // Uninstall main command
+        data.uninstallCommand(cmd)
+        unlink(cmd.toString())
 
-    if(addUnlink) {
-        unlink(addUnlink)
+        // Delete alias if a match
+        let alias = data.aliases[cmd.name]
+        if(alias == cmd.toString()) {
+            data.unpin(cmd)
+            unlink(cmd.name)
+        }
+
+        data.save()
+    } else {
+        // Uninstall unversioned
+        // Determine version from the alias
+        let alias = data.aliases[cmd.name]
+        if(alias > '') {
+            console.info(`Uninstalling: ${text} and ${alias}`)
+            data.unpin(cmd)
+            data.uninstallCommand(alias)
+            unlink(cmd.name)
+            if(alias != cmd.name) {
+                unlink(alias)
+            }
+            data.save()
+        } else {
+            // No alias, look for orphaned command
+            var orphanedCommand = data.commands[cmd.toString()]
+            if(orphanedCommand != null) {
+                console.info(`Uninstalling: ${cmd.toString()}`)
+                data.uninstallCommand(cmd)
+                unlink(cmd.toString())
+                data.save()
+            } else {
+                console.info(`Not installed: ${text}`)
+            }
+        }
     }
+}
+
+function uninstallAll() {
+    var data = new Data()
+
+    for(var command in data.commands) {
+        uninstall(command)
+    }
+
+    data = new Data()
+    for(var alias in data.aliases) {
+        data.unpin(new Command(alias))
+    }
+
+    data.save()
+}
+
+function list() {
+    var data = new Data()
+
+    console.info("")
+    console.info("Installed commands:")
+    for(var command in data.commands) {
+        console.info(" " + command)
+    }
+
+    console.info("")
+    console.info("Aliases:")
+    for(var alias in data.aliases) {
+        console.info(` ${alias} -> ${data.aliases[alias]}`)
+    }
+
+    console.info("")
 }
 
 var args = process.argv.slice(2)
@@ -438,7 +511,15 @@ switch(command) {
         break;
 
     case 'uninstall':
-        uninstall(args[0])
+        if(args[0] == '--all') {
+            uninstallAll()
+        } else {
+            uninstall(args[0])
+        }
+        break;
+
+    case 'ls':
+        list()
         break;
 
     case 'link':
