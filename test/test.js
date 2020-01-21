@@ -182,3 +182,24 @@ describe('clic ls', function() {
             "\nInstalled commands:\n terraform@0.12.8\n\nAliases:\n terraform -> terraform@0.12.8\n\n")
     })
 })
+
+describe('clic help', function() {
+    
+    let commands = [
+        'explain',
+        'install',
+        'ls',
+        'link',
+        'run',
+        'uninstall',
+        'unlink'
+    ]
+
+    commands.forEach((cmd) => {
+        it(`it can ${cmd} --help`, () => {
+            let {stdout} = exec(`clic ${cmd} --help`)
+            let r = new RegExp(`Usage:  clic ${cmd}`, "g");
+            assert(stdout.match(r))
+        });
+    })
+})

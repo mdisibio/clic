@@ -2,7 +2,7 @@ import fs = require('fs');
 import yaml = require('js-yaml');
 import cp = require('child_process');
 import path = require('path');
-import { listenerCount } from 'cluster';
+import parseArgs = require('minimist')
 
 interface IResolvedCommand {
     workdir : string
@@ -263,9 +263,24 @@ function imageExists(img : string) : boolean {
     return s.length > 0;
 }
 
-function run(explain : boolean, args) {
-    var cmdName = args[0];
-    args = args.slice(1);
+function run(args) {
+    if(args.help) {
+        if(args.explain) {
+            console.log()
+            console.log("Usage:  clic explain <command>[@version] ARGS")
+            console.log()
+            console.log("Show statements that will be executed when running a command.")
+        } else {
+            console.log()
+            console.log("Usage:  clic run <command>[@version] ARGS")
+            console.log()
+            console.log("Run a command explicitly instead of through shell alias.")
+        }
+        return;
+    }
+
+    let cmdName = args._[0];
+    let cmdArgs = args._.slice(1);
     let data = new Data()
     var resolved = data.resolveCommand(cmdName)
 
@@ -293,9 +308,9 @@ function run(explain : boolean, args) {
 
     let {volumes, workdir} = determineVolumes(resolved)
     let env = determineEnv(resolved)
-    runCmd = createCmdLine(img, volumes, workdir, resolved.entrypoint, args, env)
+    runCmd = createCmdLine(img, volumes, workdir, resolved.entrypoint, cmdArgs, env)
 
-    if(explain) {
+    if(args.explain) {
         if(buildCmd > '') { console.info(buildCmd) }
         if(runCmd > '') { console.info(runCmd) }
     } else {
@@ -304,7 +319,20 @@ function run(explain : boolean, args) {
     }
 }
 
+function linkCommand(args) {
+    if(args.help) {
+        console.log()
+        console.log("Usage:  clic link command<@version>")
+        console.log()
+        console.log("Create symbolic links for shell alias")
+        return;
+    }
+
+    link(args._[0])
+}
+
 function link(linkName : string) {
+
     let cmd = new Command(linkName)
     let repo = new Repo()
     let resolved = repo.resolveCommand(cmd) || repo.getHighest(cmd)
@@ -322,6 +350,18 @@ function link(linkName : string) {
     fs.symlinkSync(clic, link)
 
     console.info(`✓ Created symlink: ${link}`)
+}
+
+function unlinkCommand(args) {
+    if(args.help) {
+        console.log()
+        console.log("Usage:  clic unlink command<@version>")
+        console.log()
+        console.log("Delete symbolic links for given command")
+        return;
+    }
+
+    unlink(args._[0])
 }
 
 function unlink(linkName : string) {
@@ -360,7 +400,17 @@ function installClic() {
     }
 }
 
-function install(cmdName : string) {
+function install(args) {
+    if(args.help) {
+        console.log()
+        console.log("Usage:  clic install <command>[@version]")
+        console.log()
+        console.log("Install a command.  Installs latest version by default")
+        return;
+    }
+
+    let cmdName = args._[0]
+
     if(cmdName == 'clic' || cmdName == '' || cmdName == undefined) {
         installClic()
     } else {
@@ -420,7 +470,7 @@ function install(cmdName : string) {
     }
 }
 
-function uninstall(text : string) {
+function uninstallCommand(text : string) {
     var data = new Data()
     var cmd = new Command(text)
 
@@ -472,7 +522,7 @@ function uninstallAll() {
     var data = new Data()
 
     for(var command in data.commands) {
-        uninstall(command)
+        uninstallCommand(command)
     }
 
     data = new Data()
@@ -483,7 +533,31 @@ function uninstallAll() {
     data.save()
 }
 
-function list() {
+function uninstall(args) {
+    if(args.help) {
+        console.log()
+        console.log("Usage:  clic uninstall <command>[@version]")
+        console.log()
+        console.log("Uninstall a command")
+        return;
+    }
+
+    if(args.all) {
+        uninstallAll()
+    } else {
+        uninstallCommand(args._[0])
+    }
+}
+
+function list(args) {
+    if(args.help) {
+        console.log()
+        console.log("Usage:  clic ls")
+        console.log()
+        console.log("List installed commands and aliases")
+        return;
+    }
+
     var data = new Data()
 
     console.info("")
@@ -501,47 +575,51 @@ function list() {
     console.info("")
 }
 
-var args = process.argv.slice(2)
-var command = args[0];
-args = args.slice(1)
+let command = process.argv[2]
+var args = parseArgs(process.argv.slice(3), {stopEarly: true})
 
 switch(command) {
     case 'install':
-        install(args[0])
+        install(args)
         break;
 
     case 'uninstall':
-        if(args[0] == '--all') {
-            uninstallAll()
-        } else {
-            uninstall(args[0])
-        }
+        uninstall(args)
         break;
 
     case 'ls':
-        list()
+        list(args)
         break;
 
     case 'link':
-        link(args[0])
+        linkCommand(args)
         break;
 
     case 'unlink':
-        unlink(args[0])
+        unlinkCommand(args)
         break;
 
     case 'run':
-        run(false, args)
+        run(args)
         break;
     
     case 'explain':
-        run(true, args)
+        args.explain = true
+        run(args)
         break;
 
     default:
-        console.log("Usage: ")
-        console.log("  clic run <cmd@...> <args>")
-        console.log("")
-        console.log("  clic install")
-        console.log("  clic install cmd<@...>")
+        console.log()
+        console.log("Usage: clic COMMAND [ARGS] ")
+        console.log()
+        console.log("Commands:")
+        console.log("  explain    Show statements that will be executed when running a command")
+        console.log("  install    Install command or clic itself")
+        console.log("  link       Create a shell alias")
+        console.log("  ls         List installed commands")
+        console.log("  run        Run a command explicitly without a shell alias")
+        console.log("  uninstall  Uninstall command")
+        console.log("  unlink     Delete a shell alias")
+        console.log()
+        console.log("Run 'clic COMMAND --help' for more information on a command.")
 }
