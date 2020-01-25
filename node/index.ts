@@ -3,6 +3,7 @@ import yaml = require('js-yaml');
 import cp = require('child_process');
 import path = require('path');
 import parseArgs = require('minimist')
+import { resolve } from 'dns';
 
 interface IResolvedCommand {
     workdir : string
@@ -263,6 +264,14 @@ function imageExists(img : string) : boolean {
     return s.length > 0;
 }
 
+function pullImage(img : string) {
+    exec(`docker pull ${img}`, false)
+}
+
+function rmImage(img : string) {
+    exec(`docker rmi ${img}`, false)
+}
+
 function run(args) {
     if(args.help) {
         if(args.explain) {
@@ -410,7 +419,7 @@ function install(args) {
         console.log("Install a command.  Installs latest version by default")
         return;
     }
-    
+
     if(cmdName == 'clic') {
         installClic()
     } else {
@@ -446,6 +455,7 @@ function install(args) {
 
             link(cmdName)
             data.installCommand(cmd, repoCmd)
+            pullImage(repoCmd.image)
         } else {
             // clic install cmd
             // Find highest version
@@ -466,6 +476,7 @@ function install(args) {
                 link(highest.toString())
             }
             data.installCommand(highest, repoCmd)
+            pullImage(repoCmd.image)
         }
     }
 }
@@ -478,6 +489,7 @@ function uninstallCommand(text : string) {
         // Uninstall specific version
         console.info(`Uninstalling: ${cmd.toString()}`)
 
+        let resolved = data.resolveCommand(cmd.toString())
         // Uninstall main command
         data.uninstallCommand(cmd)
         unlink(cmd.toString())
@@ -490,12 +502,14 @@ function uninstallCommand(text : string) {
         }
 
         data.save()
+        rmImage(resolved.image)
     } else {
         // Uninstall unversioned
         // Determine version from the alias
         let alias = data.aliases[cmd.name]
         if(alias > '') {
             console.info(`Uninstalling: ${text} and ${alias}`)
+            let resolved = data.resolveCommand(alias)
             data.unpin(cmd)
             data.uninstallCommand(alias)
             unlink(cmd.name)
@@ -503,6 +517,7 @@ function uninstallCommand(text : string) {
                 unlink(alias)
             }
             data.save()
+            rmImage(resolved.image)
         } else {
             // No alias, look for orphaned command
             var orphanedCommand = data.commands[cmd.toString()]
@@ -511,6 +526,7 @@ function uninstallCommand(text : string) {
                 data.uninstallCommand(cmd)
                 unlink(cmd.toString())
                 data.save()
+                rmImage((orphanedCommand as IResolvedCommand).image)
             } else {
                 console.info(`Not installed: ${text}`)
             }
