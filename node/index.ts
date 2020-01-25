@@ -401,17 +401,17 @@ function installClic() {
 }
 
 function install(args) {
-    if(args.help) {
+    let cmdName = args._[0]
+
+    if(args.help || cmdName == '' || cmdName == undefined) {
         console.log()
         console.log("Usage:  clic install <command>[@version]")
         console.log()
         console.log("Install a command.  Installs latest version by default")
         return;
     }
-
-    let cmdName = args._[0]
-
-    if(cmdName == 'clic' || cmdName == '' || cmdName == undefined) {
+    
+    if(cmdName == 'clic') {
         installClic()
     } else {
         var data = new Data();
