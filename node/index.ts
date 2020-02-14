@@ -167,10 +167,10 @@ function createCmdLine(
     args: string[],
     env: Map<string,string>) 
 {
-    var commandLine = "docker run -i";
+    var commandLine = "docker run -i --rm";
 
     if(process.stdin.isTTY || process.stdout.isTTY) {
-        commandLine += "t"
+        commandLine += " -t"
     }
 
     volumes = volumes || []
@@ -455,7 +455,9 @@ function install(args) {
 
             link(cmdName)
             data.installCommand(cmd, repoCmd)
-            pullImage(repoCmd.image)
+            if(repoCmd.image > '') {
+                pullImage(repoCmd.image)
+            }
         } else {
             // clic install cmd
             // Find highest version
@@ -476,7 +478,9 @@ function install(args) {
                 link(highest.toString())
             }
             data.installCommand(highest, repoCmd)
-            pullImage(repoCmd.image)
+            if(repoCmd.image > '') {
+                pullImage(repoCmd.image)
+            }
         }
     }
 }
@@ -502,7 +506,9 @@ function uninstallCommand(text : string) {
         }
 
         data.save()
-        rmImage(resolved.image)
+        if(resolved && resolved.image > '') {
+            rmImage(resolved.image)
+        }
     } else {
         // Uninstall unversioned
         // Determine version from the alias
@@ -517,7 +523,9 @@ function uninstallCommand(text : string) {
                 unlink(alias)
             }
             data.save()
-            rmImage(resolved.image)
+            if(resolved && resolved.image > '') {
+                rmImage(resolved.image)
+            }
         } else {
             // No alias, look for orphaned command
             var orphanedCommand = data.commands[cmd.toString()]
@@ -526,7 +534,9 @@ function uninstallCommand(text : string) {
                 data.uninstallCommand(cmd)
                 unlink(cmd.toString())
                 data.save()
-                rmImage((orphanedCommand as IResolvedCommand).image)
+                if(orphanedCommand.image > '') {
+                    rmImage(orphanedCommand.image)
+                }
             } else {
                 console.info(`Not installed: ${text}`)
             }
