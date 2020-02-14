@@ -1,3 +1,51 @@
+# clic
+Clic is a apt-like platform for command line applications in pre-containerized form.  This makes commands easy to install and remove leaving little trace.  Additionally it is trivial to install multiple versions side by side.   Installed apps run seamlessly in docker via symlinks in a folder added to $PATH.
+
+### Usage
+Install latest version of a command:
+```
+$ clic install terraform
+$ terraform ...
+```
+
+Install a specific version of a command, which is runnable afterwards via command@version
+```
+$ clic install terraform@0.11.13
+$ terraform@0.11.13 ...
+```
+
+Uninstall:
+```
+$ clic uninstall terraform
+```
+
+See what is happening behind the scenes by `explain`ing any command:
+```
+$ clic explain terraform apply
+docker run -i --rm -t -v ~:/root -w /root/... hashicorp/terraform:0.12.8 apply
+```
+
+Other commands:
+* ls  - Show installed commands and aliases
+* run - Run a command manually instead of through symlink
+
+`clic install git`
+
+`clic install terraform`
+
+`clic install terraform@0.12`
+
+`clic uninstall terraform`
+
+`clic upgrade terraform`
+
+`clic ls`   <--- list installed
+
+`clic search terraform*` <--- search registry
+
+# Repository
+The repository contains a list of curated entries maintained in this repo.  Containers are chosen based on trust or official releases. 
+
 # Ideas:
 * wrap command line tools in docker and run them seamlessly
 * commands work identical to regular versions but are aliases to running them in docker
