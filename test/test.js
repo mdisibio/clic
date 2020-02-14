@@ -23,17 +23,22 @@ function assertBinDoesNotExist(cmdName) {
     assert(fs.existsSync(getBin(cmdName)) == false)
 }
 
-function exec(cmd) {
+function exec(cmd, check = true) {
     try {
+        //console.error("     " + cmd)
         var stdout = cp.execSync(cmd).toString()
         return {
             stdout: stdout, 
             exitCode: 0
         }
     } catch(error) {
-        return {
-            stdout: error.stdout.toString(),
-            exitCode: error.status
+        if(check) {
+            assert.fail(`Command '${cmd}' exited with code ${error.status}`)
+        } else {
+            return {
+                stdout: error.stdout.toString(),
+                exitCode: error.status
+            }
         }
     }
 }
@@ -108,7 +113,7 @@ describe('clic install', function() {
 })
 
 describe('clic link', function() {
-    this.timeout(5000)
+    this.timeout(10000)
     
     it('can unlink', () => {
         exec('clic unlink hello-world')
@@ -121,13 +126,13 @@ describe('clic link', function() {
     })
 
     it('doesn\'t link unknown command', () => {
-        let {exitCode} = exec('clic link asdf')
+        let {exitCode} = exec('clic link asdf', false)
         assert.equal(exitCode, 255)
     })
 })
 
 describe('clic run', function() {
-    this.timeout(5000)
+    this.timeout(10000)
 
     it('captures stdout', () => {
         exec('clic install hello-world')
@@ -143,7 +148,7 @@ describe('clic run', function() {
 
     it('captures exit code', () => {
         exec('clic install alpine')
-        let {exitCode} = exec('clic run alpine false')
+        let {exitCode} = exec('clic run alpine false', false)
         assert.equal(exitCode, 1)
     })
 
@@ -176,14 +181,14 @@ describe('clic run', function() {
 })
 
 describe('clic ls', function() {
-    this.timeout(5000)
+    this.timeout(10000)
 
     it('can ls', () => {
         exec('clic uninstall --all')
-        exec('clic install terraform@0.12.8')
+        exec('clic install alpine@3.10.0')
         let {stdout} = exec('clic ls')
         assert.equal(stdout,
-            "\nInstalled commands:\n terraform@0.12.8\n\nAliases:\n terraform -> terraform@0.12.8\n\n")
+            "\nInstalled commands:\n alpine@3.10.0\n\nAliases:\n alpine -> alpine@3.10.0\n\n")
     })
 })
 
