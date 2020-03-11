@@ -60,3 +60,18 @@ func getDataPath() (string, error) {
 
 	return filepath.Join(clic, "data.yaml"), nil
 }
+
+func mkdir(f string) (bool, error) {
+	if _, err := os.Stat(f); err != nil {
+		if os.IsNotExist(err) {
+			err := os.Mkdir(f, 0600)
+			if err != nil {
+				return false, err
+			}
+			// Folder was created
+			return true, err
+		}
+		return false, err
+	}
+	return false, nil
+}

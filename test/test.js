@@ -206,7 +206,7 @@ describe('clic help', function() {
 
     commands.forEach((cmd) => {
         it(`it can ${cmd} --help`, () => {
-            let {stdout} = exec(`clic ${cmd} --help`)
+            let {stdout} = exec(`clic ${cmd} --help`, false)
             let r = new RegExp(`Usage:  clic ${cmd}`, "g");
             assert(stdout.match(r))
         });

@@ -3,13 +3,13 @@ package main
 import (
 	"io/ioutil"
 	"os"
+	"sort"
 
 	"gopkg.in/yaml.v2"
 )
 
 // Data The contents of the data file
 type Data struct {
-	Aliases  map[string]string
 	Commands map[string]RepoCommand
 }
 
@@ -24,7 +24,6 @@ func loadData() (Data, error) {
 	data, err := ioutil.ReadFile(f)
 	if err != nil {
 		if os.IsNotExist(err) {
-			d.Aliases = make(map[string]string)
 			d.Commands = make(map[string]RepoCommand)
 			return d, nil
 		}
@@ -58,6 +57,41 @@ func (d *Data) installCommand(cmd RepoCommand) error {
 	return d.save()
 }
 
-/*func (d *Data) setAlias(alias string, cmd CommandVersion) error {
+func (d *Data) uninstallCommand(cmd CommandVersion) error {
+	delete(d.Commands, cmd.toString())
+	return d.save()
+}
 
-}*/
+func (d *Data) sortedCommands() []string {
+	var keys []string
+	for k := range d.Commands {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+func (d *Data) sortedHighestCommands() []RepoCommand {
+	var highest map[string]RepoCommand
+	highest = make(map[string]RepoCommand)
+
+	for k := range d.Commands {
+		vers := parseCommand(k)
+		if val, ok := highest[vers.command]; ok == false || k > val.Name {
+			highest[vers.command] = d.Commands[k]
+		}
+	}
+
+	var sorted []string
+	for k := range highest {
+		sorted = append(sorted, k)
+	}
+	sort.Strings(sorted)
+
+	var sortedCommands []RepoCommand
+	for _, k := range sorted {
+		sortedCommands = append(sortedCommands, highest[k])
+	}
+
+	return sortedCommands
+}
