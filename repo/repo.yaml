@@ -23,5 +23,7 @@ commands:
     dockerfile: Dockerfile.nsnake
     entrypoint: /usr/games/nsnake
     fixttydims: true
+  landscape:
+    dockerfile: Dockerfile.landsacpe
   hello-world:
     image: hello-world
