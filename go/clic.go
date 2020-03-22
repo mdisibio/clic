@@ -22,13 +22,22 @@ func doRun(args []string) error {
 
 	commandName := parser.Args()[0]
 	commandArgs := parser.Args()[1:]
+	cmdVers := parseCommand(commandName)
 
-	repo, err := loadRepo()
+	// Try data then repo
+	data, err := loadData()
 	if err != nil {
 		return err
 	}
+	cmd := data.resolve(cmdVers)
+	if cmd == nil {
+		repo, err := loadRepo()
+		if err != nil {
+			return err
+		}
+		cmd = repo.resolve(cmdVers)
+	}
 
-	cmd := repo.resolve(parseCommand(commandName))
 	if cmd == nil {
 		return fmt.Errorf("Unknown command: %s", commandName)
 	}
@@ -183,7 +192,7 @@ func doInstall(args []string) error {
 }
 
 func doUninstall(args []string) error {
-	parser := flag.NewFlagSet("uninstall", flag.ContinueOnError)
+	parser := flag.NewFlagSet("uninstall", flag.ExitOnError)
 	parser.Usage = func() {
 		fmt.Println("Usage:  clic uninstall [ARGS] [COMMANDS]")
 		parser.PrintDefaults()
@@ -271,7 +280,7 @@ func doLink(args []string) error {
 }
 
 func doUnlink(args []string) error {
-	parser := flag.NewFlagSet("unlink", flag.ContinueOnError)
+	parser := flag.NewFlagSet("unlink", flag.ExitOnError)
 	parser.Usage = func() {
 		fmt.Println("Usage:  clic unlink COMMAND[@VERS]")
 		parser.PrintDefaults()
@@ -287,7 +296,7 @@ func doUnlink(args []string) error {
 }
 
 func doList(args []string) error {
-	parser := flag.NewFlagSet("ls", flag.ContinueOnError)
+	parser := flag.NewFlagSet("ls", flag.ExitOnError)
 	parser.Usage = func() {
 		fmt.Println("Usage:  clic ls COMMAND[@VERS]")
 		parser.PrintDefaults()
@@ -359,28 +368,20 @@ func main() {
 
 	switch strings.ToLower(os.Args[1]) {
 	case "explain":
-		//doExplain(os.Args[2:])
 		f = doExplain
 	case "install":
-		//doInstall(os.Args[2:])
 		f = doInstall
 	case "link":
-		//doLink(os.Args[2:])
 		f = doLink
 	case "ls":
-		//doList(os.Args[2:])
 		f = doList
 	case "run":
-		//doRun(os.Args[2:])
 		f = doRun
 	case "uninstall":
-		//doUninstall(os.Args[2:])
 		f = doUninstall
 	case "unlink":
-		//doUnlink(os.Args[2:])
 		f = doUnlink
 	default:
-		//doHelp()
 		f = doHelp
 	}
 

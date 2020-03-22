@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"sort"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 )
@@ -50,6 +51,41 @@ func (d *Data) save() error {
 	}
 
 	return ioutil.WriteFile(f, data, 0600)
+}
+
+func (d *Data) resolve(cmd CommandVersion) *RepoCommand {
+
+	if cmd.hasVersion == false {
+		return d.resolveLatest(cmd)
+	}
+
+	cmdStr := cmd.toString()
+
+	for k, v := range d.Commands {
+		if k == cmdStr {
+			return &v
+		}
+	}
+
+	return nil
+}
+
+func (d Data) resolveLatest(cmd CommandVersion) *RepoCommand {
+	var matches []string
+
+	for k := range d.Commands {
+		if strings.HasPrefix(k, cmd.command) {
+			matches = append(matches, k)
+		}
+	}
+
+	if len(matches) <= 0 {
+		return nil
+	}
+
+	sort.Strings(matches)
+	match := d.Commands[matches[len(matches)-1]]
+	return &match
 }
 
 func (d *Data) installCommand(cmd RepoCommand) error {
