@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 )
@@ -31,6 +32,12 @@ func doRun(args []string) error {
 	}
 	cmd := data.resolve(cmdVers)
 	if cmd == nil {
+
+		err := fetchIfNeeded()
+		if err != nil {
+			return err
+		}
+
 		repo, err := loadRepo()
 		if err != nil {
 			return err
@@ -60,6 +67,11 @@ func doExplain(args []string) error {
 
 	commandName := parser.Args()[0]
 	commandArgs := parser.Args()[1:]
+
+	err := fetchIfNeeded()
+	if err != nil {
+		return err
+	}
 
 	repo, err := loadRepo()
 	if err != nil {
@@ -153,6 +165,11 @@ func doInstall(args []string) error {
 
 	if commandVers.command == "clic" {
 		return doInstallClic()
+	}
+
+	err := fetchIfNeeded()
+	if err != nil {
+		return err
 	}
 
 	repo, err := loadRepo()
@@ -335,6 +352,7 @@ func doHelp(_ []string) error {
 	fmt.Println("Commands:")
 	fmt.Println("  explain    Show statements that will be executed when running a command")
 	fmt.Println("  install    Install command or clic itself")
+	fmt.Println("  fetch      Fetch latest command listing")
 	fmt.Println("  link       Create a shell alias")
 	fmt.Println("  ls         List installed commands")
 	fmt.Println("  run        Run a command explicitly without a shell alias")
@@ -344,6 +362,51 @@ func doHelp(_ []string) error {
 	fmt.Println("Run 'clic COMMAND --help' for more information on a command.")
 
 	return nil
+}
+
+func fetchIfNeeded() error {
+
+	r, err := getRepoPath()
+	if err != nil {
+		return err
+	}
+
+	_, err = os.Stat(r)
+	if err == nil || !os.IsNotExist(err) {
+		return err
+	}
+
+	return fetch()
+}
+
+func fetch() error {
+	dst, err := getClicHome()
+	if err != nil {
+		return nil
+	}
+
+	err = os.MkdirAll(path.Join(dst, "repo"), 0777)
+	if err != nil {
+		return err
+	}
+
+	err = downloadGithub("mdisibio/clic", "repo", dst)
+
+	return err
+}
+
+func doFetch(args []string) error {
+	parser := flag.NewFlagSet("fetch", flag.ExitOnError)
+	parser.Usage = func() {
+		fmt.Println("Usage:  clic fetch")
+		parser.PrintDefaults()
+	}
+	if err := parser.Parse(args); err == flag.ErrHelp {
+		parser.Usage()
+		return nil
+	}
+
+	return fetch()
 }
 
 func main() {
@@ -369,6 +432,8 @@ func main() {
 	switch strings.ToLower(os.Args[1]) {
 	case "explain":
 		f = doExplain
+	case "fetch":
+		f = doFetch
 	case "install":
 		f = doInstall
 	case "link":

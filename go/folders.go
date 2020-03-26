@@ -49,7 +49,7 @@ func getRepoPath() (string, error) {
 		return "", err
 	}
 
-	return filepath.Join(clic, "repo.yaml"), nil
+	return filepath.Join(clic, "repo", "repo.yaml"), nil
 }
 
 func getDataPath() (string, error) {
@@ -59,6 +59,15 @@ func getDataPath() (string, error) {
 	}
 
 	return filepath.Join(clic, "data.yaml"), nil
+}
+
+func getDockerfilePath(dockerfile string) (string, error) {
+	clic, err := getClicHome()
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(clic, "repo", dockerfile), nil
 }
 
 func mkdir(f string) (bool, error) {

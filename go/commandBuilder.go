@@ -40,11 +40,16 @@ func BuildCommands(cmd RepoCommand, args []string) []Command {
 
 	if cmd.Dockerfile > "" {
 		img = cmd.Name + ":latest"
+		df, err := getDockerfilePath(cmd.Dockerfile)
+		if err != nil {
+			return cmds
+		}
+
 		buildCmd := Command{}
 		buildCmd.Skip = imageExists(img)
 		buildCmd.Name = "docker"
 		buildCmd.Args = []string{"build", "-t", img, "-"}
-		buildCmd.StdinFile = "../node/" + cmd.Dockerfile
+		buildCmd.StdinFile = df
 		buildCmd.Exit = false
 		cmds = append(cmds, buildCmd)
 	}
