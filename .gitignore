@@ -2,4 +2,5 @@
 **/.vscode
 node/*.js
 node/*.js.map
+go/clic
 **/package-lock.json

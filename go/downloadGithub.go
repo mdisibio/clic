@@ -73,15 +73,20 @@ func downloadGithub(repoName string, repoFolder string, dstFolder string) error 
 		return err
 	}
 
+	fmt.Printf("Downloading %s/%s to %s\n", repoName, repoFolder, dstFolder)
+
 	for _, l := range listings {
 		dst := path.Join(dstFolder, l.Path)
-		fmt.Println("Downloading", l.DownloadURL, "to", dst)
+		//fmt.Println("Downloading", l.DownloadURL, "to", dst)
+		fmt.Print(".")
 
 		err = downloadFile(dst, l.DownloadURL)
 		if err != nil {
 			return err
 		}
 	}
+
+	fmt.Println()
 
 	return nil
 }
