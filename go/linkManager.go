@@ -47,8 +47,8 @@ func unlink(cmd CommandVersion) error {
 		if err != nil {
 			return err
 		}
+		fmt.Println("✓ Removed symlink:", linkPath)
 	}
 
-	fmt.Println("✓ Removed symlink:", linkPath)
 	return nil
 }

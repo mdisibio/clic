@@ -242,7 +242,14 @@ func doUninstall(args []string) error {
 		toUninstall = append(toUninstall, parseCommand(parser.Args()[0]))
 	}
 
+	uninstalled := 0
+
 	for _, c := range toUninstall {
+		actual := d.resolve(c)
+		if actual == nil {
+			continue
+		}
+
 		if err = unlink(c); err != nil {
 			return err
 		}
@@ -261,6 +268,12 @@ func doUninstall(args []string) error {
 				unlink(parseCommand(latest.Name))
 			}
 		}
+
+		uninstalled++
+	}
+
+	if uninstalled == 0 {
+		fmt.Println("No commands were uninstalled. Try specifying exact version.")
 	}
 
 	return nil
