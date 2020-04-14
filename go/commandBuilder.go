@@ -72,12 +72,18 @@ func determineVolumes(cmd RepoCommand) ([]string, string) {
 	finalWorkDir := cmd.Workdir
 
 	if len(cmd.Workdir) > 0 {
-		if home, err := getUserHome(); err == nil {
-			if cwd, err := os.Getwd(); err == nil {
-				if p, err := filepath.Rel(home, cwd); err == nil {
-					volumes = append(volumes, home+":"+cmd.Workdir)
-					finalWorkDir = filepath.Join(cmd.Workdir, p)
+		if cmd.Mount == MountAuto {
+			if home, err := getUserHome(); err == nil {
+				if cwd, err := os.Getwd(); err == nil {
+					if p, err := filepath.Rel(home, cwd); err == nil {
+						volumes = append(volumes, home+":"+cmd.Workdir)
+						finalWorkDir = filepath.Join(cmd.Workdir, p)
+					}
 				}
+			}
+		} else if cmd.Mount == MountPwd {
+			if cwd, err := os.Getwd(); err == nil {
+				volumes = append(volumes, cwd+":"+cmd.Workdir)
 			}
 		}
 	}

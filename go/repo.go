@@ -8,6 +8,17 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// MountOption What folders to mount
+type MountOption string
+
+const (
+	// MountAuto StandardAutomatically mount home folder with relative path or pwd
+	MountAuto MountOption = "auto"
+
+	// MountPwd Mount the pwd only
+	MountPwd MountOption = "pwd"
+)
+
 // RepoCommand is an entry in the repo file
 type RepoCommand struct {
 	Name       string
@@ -15,8 +26,11 @@ type RepoCommand struct {
 	Dockerfile string
 	Workdir    string
 	Entrypoint string
-	Fixttydims bool
 	Volumes    []string
+
+	// Options
+	Fixttydims bool
+	Mount      MountOption
 }
 
 // Repo is the repository of all known commands
