@@ -54,6 +54,9 @@ func getListing(src string) ([]githublisting, error) {
 
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	listings := make([]githublisting, 0)
 	err = json.Unmarshal(body, &listings)

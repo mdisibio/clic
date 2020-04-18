@@ -124,7 +124,15 @@ func doInstallClic() error {
 
 	// Copy executable if needed
 	expected, err := getClicBinPath("clic")
+	if err != nil {
+		return err
+	}
+
 	current, err := os.Executable()
+	if err != nil {
+		return err
+	}
+
 	if current != expected {
 		input, err := ioutil.ReadFile(current)
 		if err != nil {
