@@ -51,7 +51,7 @@ func doRun(args []string) error {
 	}
 
 	cmds := BuildCommands(*cmd, commandArgs)
-	Run(cmds)
+	run(cmds)
 	return nil
 }
 
