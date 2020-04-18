@@ -57,7 +57,7 @@ describe('clic install', function() {
     it('can install cmd', () => {
         exec('clic install terraform')
         let {stdout} = exec(getBin('terraform') + ' --version')
-        assert(stdout.match(/Terraform v0.12.8/gi))
+        assert(stdout.match(/Terraform v0.12.24/gi))
     })
 
     it('can install cmd@vers', () => {
@@ -69,7 +69,7 @@ describe('clic install', function() {
     it('can uninstall cmd', () => {
         exec('clic uninstall terraform')
         assertBinDoesNotExist('terraform')
-        assertBinDoesNotExist('terraform@0.12.8')
+        assertBinDoesNotExist('terraform@0.12.24')
     })
 
     it('can uninstall cmd@vers', () => {
@@ -108,7 +108,7 @@ describe('clic install', function() {
         exec('clic install terraform')
 
         let {stdout} = exec(getBin('terraform') + ' --version')
-        assert(stdout.match(/Terraform v0.12.8/gi))
+        assert(stdout.match(/Terraform v0.12.24/gi))
     })
 })
 
