@@ -1,4 +1,6 @@
 # clic
+[![Go Report Card](https://goreportcard.com/badge/github.com/mdisibio/clic)](https://goreportcard.com/report/github.com/mdisibio/clic)
+
 Clic is a apt-like platform for command line applications in pre-containerized form.  This makes commands simple to add and remove leaving minimum alterations to the underlying system.  Additionally it is possible to install multiple versions side by side without conflict.   Installed apps appear as native commands via symlinks in a folder added to $PATH.
 
 ### Usage
