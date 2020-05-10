@@ -19,6 +19,17 @@ const (
 	MountPwd MountOption = "pwd"
 )
 
+// StdInOption How to handle stdin
+type StdInOption string
+
+const (
+	// StdInEmpty Default handling for stdin, when not specified in the repo yaml
+	StdInEmpty StdInOption = ""
+
+	// StdInFalse Disable stdin for the spawned process
+	StdInFalse StdInOption = "false"
+)
+
 // RepoCommand is an entry in the repo file
 type RepoCommand struct {
 	Name       string
@@ -31,6 +42,7 @@ type RepoCommand struct {
 	// Options
 	Fixttydims bool
 	Mount      MountOption
+	Stdin      StdInOption
 }
 
 // Repo is the repository of all known commands

@@ -22,6 +22,7 @@ commands:
     workdir: /root
     entrypoint: /usr/local/bin/awslogs
     mount: auto
+    stdin: false
   nsnake:
     dockerfile: Dockerfile.nsnake
     entrypoint: /usr/games/nsnake

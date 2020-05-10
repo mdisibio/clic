@@ -16,9 +16,12 @@ func runNative(cmds []Command) {
 		}
 
 		p := exec.Command(c.Name, c.Args...)
-		p.Stdin = os.Stdin
 		p.Stdout = os.Stdout
 		p.Stderr = os.Stderr
+
+		if c.Stdin {
+			p.Stdin = os.Stdin
+		}
 
 		if c.StdinFile > "" {
 			p.Stdin, _ = os.Open(c.StdinFile)

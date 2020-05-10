@@ -14,6 +14,7 @@ type Command struct {
 	Args      []string
 	Exit      bool
 	StdinFile string
+	Stdin     bool
 	Skip      bool
 }
 
@@ -56,8 +57,15 @@ func BuildCommands(cmd RepoCommand, args []string) []Command {
 
 	volumes, workdir := determineVolumes(cmd)
 	envs := determinEnvVars(cmd)
-	runCmd := createCmdLine(img, volumes, workdir, cmd.Entrypoint, args, envs)
-	cmds = append(cmds, Command{Name: runCmd[0], Args: runCmd[1:], Exit: true})
+
+	stdin := determineStdInEnabled(cmd)
+
+	runCmd := createDockerRunCmdLine(img, volumes, workdir, cmd.Entrypoint, args, stdin, envs)
+	cmds = append(cmds, Command{
+		Name:  runCmd[0],
+		Args:  runCmd[1:],
+		Exit:  true,
+		Stdin: stdin})
 
 	return cmds
 }
@@ -65,6 +73,10 @@ func BuildCommands(cmd RepoCommand, args []string) []Command {
 func imageExists(img string) bool {
 	out, _ := exec.Command("docker", "images", "-q", img).Output()
 	return len(out) > 0
+}
+
+func determineStdInEnabled(cmd RepoCommand) bool {
+	return cmd.Stdin != StdInFalse
 }
 
 func determineVolumes(cmd RepoCommand) ([]string, string) {
@@ -116,17 +128,23 @@ func getTermDim() (width, height int, err error) {
 	return
 }
 
-func createCmdLine(
+func createDockerRunCmdLine(
 	image string,
 	volumes []string,
 	workdir string,
 	entrypoint string,
 	args []string,
+	stdinEnable bool,
 	env map[string]string) []string {
 	var s []string
 
-	s = append(s, "docker", "run", "-i", "--rm")
+	s = append(s, "docker", "run", "--rm")
 
+	if stdinEnable {
+		s = append(s, "-i")
+	}
+
+	// Detect tty mode
 	stdin, _ := os.Stdin.Stat()
 	stdout, _ := os.Stdout.Stat()
 
