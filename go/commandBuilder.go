@@ -95,11 +95,25 @@ func determinEnvVars(cmd RepoCommand) map[string]string {
 	envs := make(map[string]string)
 
 	if cmd.Fixttydims {
-		envs["COLUMNS"] = "`tput cols`"
-		envs["LINES"] = "`tput lines`"
+		cols, lines, err := getTermDim()
+		if err == nil {
+			envs["COLUMNS"] = fmt.Sprint(cols)
+			envs["LINES"] = fmt.Sprint(lines)
+		}
 	}
 
 	return envs
+}
+
+func getTermDim() (width, height int, err error) {
+	cmd := exec.Command("stty", "size")
+	cmd.Stdin = os.Stdin
+	var termDim []byte
+	if termDim, err = cmd.Output(); err != nil {
+		return
+	}
+	fmt.Sscan(string(termDim), &height, &width)
+	return
 }
 
 func createCmdLine(
