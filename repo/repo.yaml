@@ -7,6 +7,10 @@ commands:
     image: 'certbot/certbot:v0.39.0'
     workdir: /root
     mount: pwd
+  helm@2.16.7:
+    image: alpine/helm:2.16.7
+    workdir: /root
+    mount: auto
   hello-world:
     image: hello-world
   terraform@0.12.24:
