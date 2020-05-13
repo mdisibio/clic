@@ -159,6 +159,19 @@ func doInstallClic() error {
 	return nil
 }
 
+func pullOrBuild(cmd RepoCommand) error {
+	if cmd.Image > "" {
+		runCommand(Command{
+			Name: "docker",
+			Args: []string{"pull", cmd.Image},
+		})
+		fmt.Println("✓ Pulled:", cmd.Image)
+	} else if cmd.Dockerfile > "" {
+
+	}
+	return nil
+}
+
 func doInstall(args []string) error {
 	parser := flag.NewFlagSet("install", flag.ExitOnError)
 	parser.Usage = func() {
@@ -198,15 +211,24 @@ func doInstall(args []string) error {
 
 	err = d.installCommand(*cmd)
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 
+	err = pullOrBuild(*cmd)
+	if err != nil {
+		return err
+	}
+
+	// Resolve a shorthand "command" to full "command@vers"
+	// Always link the fullhand "command@vers"
 	resolvedVersion := parseCommand(cmd.Name)
 	err = link(resolvedVersion)
 	if err != nil {
 		return err
 	}
 
+	// Link the input as given, if different from the
+	// fullhand linked above.
 	if resolvedVersion.toString() != commandVers.toString() {
 		err = link(commandVers)
 		if err != nil {

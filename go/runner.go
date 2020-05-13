@@ -6,35 +6,35 @@ import (
 )
 
 func run(cmds []Command) {
-	runNative(cmds)
+	for _, c := range cmds {
+		runCommand(c)
+	}
 }
 
-func runNative(cmds []Command) {
-	for _, c := range cmds {
-		if c.Skip {
-			continue
+func runCommand(c Command) {
+	if c.Skip {
+		return
+	}
+
+	p := exec.Command(c.Name, c.Args...)
+	p.Stdout = os.Stdout
+	p.Stderr = os.Stderr
+
+	if c.Stdin {
+		p.Stdin = os.Stdin
+	}
+
+	if c.StdinFile > "" {
+		p.Stdin, _ = os.Open(c.StdinFile)
+	}
+
+	err := p.Run()
+
+	if c.Exit || err != nil {
+		if exitError, ok := err.(*exec.ExitError); ok {
+			os.Exit(exitError.ExitCode())
+			return
 		}
-
-		p := exec.Command(c.Name, c.Args...)
-		p.Stdout = os.Stdout
-		p.Stderr = os.Stderr
-
-		if c.Stdin {
-			p.Stdin = os.Stdin
-		}
-
-		if c.StdinFile > "" {
-			p.Stdin, _ = os.Open(c.StdinFile)
-		}
-
-		err := p.Run()
-
-		if c.Exit || err != nil {
-			if exitError, ok := err.(*exec.ExitError); ok {
-				os.Exit(exitError.ExitCode())
-				return
-			}
-			os.Exit(0)
-		}
+		os.Exit(0)
 	}
 }
