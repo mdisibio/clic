@@ -79,19 +79,46 @@ func determineStdInEnabled(cmd RepoCommand) bool {
 	return cmd.Stdin != StdInFalse
 }
 
+func determineVolumesMountAuto(cmd RepoCommand) (string, string, error) {
+	home, err := getUserHome()
+	if err != nil {
+		return "", "", err
+	}
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", "", err
+	}
+
+	p, err := filepath.Rel(home, cwd)
+	if err != nil {
+		return "", "", err
+	}
+	if !strings.HasPrefix(p, ".") {
+		// Cwd is under home,
+		// so mount relatively
+		volume := home + ":" + cmd.Workdir
+		finalWorkDir := filepath.Join(cmd.Workdir, p)
+		return volume, finalWorkDir, nil
+	}
+
+	// Can't determine a smart relative path,
+	// so fallback to mounting cwd
+	volume := cwd + ":" + cmd.Workdir
+	finalWorkDir := cmd.Workdir
+	return volume, finalWorkDir, nil
+}
+
 func determineVolumes(cmd RepoCommand) ([]string, string) {
 	volumes := cmd.Volumes
 	finalWorkDir := cmd.Workdir
 
 	if len(cmd.Workdir) > 0 {
 		if cmd.Mount == MountAuto {
-			if home, err := getUserHome(); err == nil {
-				if cwd, err := os.Getwd(); err == nil {
-					if p, err := filepath.Rel(home, cwd); err == nil {
-						volumes = append(volumes, home+":"+cmd.Workdir)
-						finalWorkDir = filepath.Join(cmd.Workdir, p)
-					}
-				}
+			addlVolumes, newWorkDir, err := determineVolumesMountAuto(cmd)
+			if err == nil {
+				volumes = append(volumes, addlVolumes)
+				finalWorkDir = newWorkDir
 			}
 		} else if cmd.Mount == MountPwd {
 			if cwd, err := os.Getwd(); err == nil {
