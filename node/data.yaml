@@ -1,6 +1,0 @@
-aliases:
-  terraform: terraform@0.12.8
-commands:
-  terraform@0.12.8:
-    image: 'hashicorp/terraform:0.12.8'
-    workdir: /root
