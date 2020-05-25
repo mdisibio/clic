@@ -50,10 +50,6 @@ describe('clic install', function() {
         exec('clic install')
     })
 
-    it('can install clic', function() {
-        exec('clic install clic')
-    })
-
     it('can install cmd', () => {
         exec('clic install terraform')
         let {stdout} = exec(getBin('terraform') + ' --version')

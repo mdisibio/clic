@@ -4,7 +4,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -26,6 +25,11 @@ func doRun(args []string) error {
 	commandArgs := parser.Args()[1:]
 	cmdVers := parseCommand(commandName)
 
+	err := checkOneTimeSetup()
+	if err != nil {
+		return err
+	}
+
 	// Try data then repo
 	data, err := loadData()
 	if err != nil {
@@ -33,12 +37,6 @@ func doRun(args []string) error {
 	}
 	cmd := data.resolve(cmdVers)
 	if cmd == nil {
-
-		err := fetchIfNeeded()
-		if err != nil {
-			return err
-		}
-
 		repo, err := loadRepo()
 		if err != nil {
 			return err
@@ -69,7 +67,7 @@ func doExplain(args []string) error {
 	commandName := parser.Args()[0]
 	commandArgs := parser.Args()[1:]
 
-	err := fetchIfNeeded()
+	err := checkOneTimeSetup()
 	if err != nil {
 		return err
 	}
@@ -92,24 +90,34 @@ func doExplain(args []string) error {
 	return nil
 }
 
-func doInstallClic() error {
-	fmt.Println("Installing clic...")
+func pullOrBuild(cmd RepoCommand) error {
+	if cmd.Image > "" {
+		runCommand(Command{
+			Name: "docker",
+			Args: []string{"pull", cmd.Image},
+		})
+		fmt.Println("✓ Pulled:", cmd.Image)
+	} else if cmd.Dockerfile > "" {
 
-	// Create home folder if needed
+	}
+	return nil
+}
+
+func checkOneTimeSetup() error {
+	// Check home folder
 	home, err := getClicHome()
 	if err != nil {
 		return err
 	}
-
 	created, err := mkdir(home)
-	if created {
-		fmt.Println("✓ clic home created:", home)
-	}
 	if err != nil {
 		return err
 	}
+	if created {
+		fmt.Println("✓ clic home created:", home)
+	}
 
-	// Create bin folder if needed
+	// Check /bin/ folder
 	bin, err := getClicBinPath("")
 	if err != nil {
 		return err
@@ -122,54 +130,19 @@ func doInstallClic() error {
 		return err
 	}
 
-	// Copy executable if needed
-	expected, err := getClicBinPath("clic")
+	// Fetch latest if needed
+	r, err := getRepoPath()
 	if err != nil {
 		return err
 	}
 
-	current, err := os.Executable()
-	if err != nil {
+	_, err = os.Stat(r)
+	if err == nil || !os.IsNotExist(err) {
+		// File exists or some error occurred
 		return err
 	}
 
-	if current != expected {
-		input, err := ioutil.ReadFile(current)
-		if err != nil {
-			return err
-		}
-
-		err = ioutil.WriteFile(expected, input, 0644)
-		if err != nil {
-			return err
-		}
-	}
-
-	// Add folders to the path
-	/*let bash_profile = getUserHome() + path.sep + '.bash_profile'
-	  if(fs.existsSync(bash_profile)) {
-	      var content = fs.readFileSync(bash_profile, 'utf-8');
-	      if(content.search(bin) == -1) {
-	          let line = `export PATH="$PATH:${bin}"\n`
-	          fs.appendFileSync(bash_profile, line);
-	      }
-	      console.log(`✓ clic bin added to ${bash_profile}`)
-	  }*/
-
-	return nil
-}
-
-func pullOrBuild(cmd RepoCommand) error {
-	if cmd.Image > "" {
-		runCommand(Command{
-			Name: "docker",
-			Args: []string{"pull", cmd.Image},
-		})
-		fmt.Println("✓ Pulled:", cmd.Image)
-	} else if cmd.Dockerfile > "" {
-
-	}
-	return nil
+	return fetch()
 }
 
 func doInstall(args []string) error {
@@ -185,11 +158,7 @@ func doInstall(args []string) error {
 
 	commandVers := parseCommand(parser.Args()[0])
 
-	if commandVers.command == "clic" {
-		return doInstallClic()
-	}
-
-	err := fetchIfNeeded()
+	err := checkOneTimeSetup()
 	if err != nil {
 		return err
 	}
@@ -407,21 +376,6 @@ func doHelp(_ []string) error {
 	fmt.Println("Run 'clic COMMAND --help' for more information on a command.")
 
 	return nil
-}
-
-func fetchIfNeeded() error {
-
-	r, err := getRepoPath()
-	if err != nil {
-		return err
-	}
-
-	_, err = os.Stat(r)
-	if err == nil || !os.IsNotExist(err) {
-		return err
-	}
-
-	return fetch()
 }
 
 func fetch() error {
