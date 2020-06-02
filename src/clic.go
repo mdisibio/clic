@@ -479,7 +479,9 @@ func doUpgrade(args []string) error {
 func main() {
 
 	processName := filepath.Base(os.Args[0])
-	if processName != "clic" {
+	if processName != "clic" && !strings.HasPrefix(processName, "clic-") {
+		// Being called via symlink.  Use the incoming
+		// process name as the command to run.
 		runArgs := []string{processName}
 		runArgs = append(runArgs, os.Args[1:]...)
 		err := doRun(runArgs)

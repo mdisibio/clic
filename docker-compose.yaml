@@ -1,0 +1,23 @@
+version: '3.4'
+
+services:
+  build:
+    image: golang:latest
+    command: /bin/sh -c "
+      for GOOS in darwin linux; do
+        for GOARCH in amd64; do
+          export GOOS GOARCH;
+          echo $$GOOS $$GOARCH;
+          CGO_ENABLED=0 go build -v -o ../bin/clic-$$GOOS-$$GOARCH;
+        done;
+      done;"
+    volumes:
+      - .:/usr/src/clic
+    working_dir: /usr/src/clic/src
+
+  test:
+    image: docker:latest
+    volumes:
+      - .:/usr/src/clic
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /usr/src/clic
