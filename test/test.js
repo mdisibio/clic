@@ -3,6 +3,8 @@ var assert = require('assert')
 var cp = require('child_process')
 var path = require('path')
 
+var skipMountTests = process.env["SKIP_MOUNT_TESTS"] || false
+
 function getUserHome() {
     return process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
 }
@@ -158,15 +160,17 @@ describe('clic run', function() {
         exec('clic run alpine')
     })
 
-    it('mounts the current folder', () => {
-        let {stdout} = exec('clic run alpine ls test.js')
-        assert(stdout.match(/test.js/gi))
-    })
+    if (!skipMountTests) {
+        it('mounts the current folder', () => {
+            let {stdout} = exec('clic run alpine ls test.js')
+            assert(stdout.match(/test.js/gi))
+        })
 
-    it('mounts the parent folder', () => {
-        let {stdout} = exec('clic run alpine ls ..')
-        assert(stdout.match(/test/gi))
-    })
+        it('mounts the parent folder', () => {
+            let {stdout} = exec('clic run alpine ls ..')
+            assert(stdout.match(/test/gi))
+        })
+    }
 
     it('runs tool with dockerfile', () => {
         exec('clic install nsnake')

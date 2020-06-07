@@ -29,15 +29,9 @@ func doHelp(_ []string) error {
 
 func main() {
 
-	sym, err := isExecutedViaSymlink()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(255)
-	}
-
-	if sym {
-		// Being called via symlink.  Use the incoming
-		// process name as the command to run.
+	if isExecutedViaSymlink() {
+		// Use the incoming process
+		// name as the command to run.
 		processName := filepath.Base(os.Args[0])
 		runArgs := []string{processName}
 		runArgs = append(runArgs, os.Args[1:]...)
@@ -87,16 +81,7 @@ func main() {
 	}
 }
 
-func isExecutedViaSymlink() (bool, error) {
-	e, err := os.Executable()
-	if err != nil {
-		return false, err
-	}
-
-	i, err := os.Lstat(e)
-	if err != nil {
-		return false, err
-	}
-
-	return i.Mode()&os.ModeSymlink != 0, nil
+func isExecutedViaSymlink() bool {
+	name := filepath.Base(os.Args[0])
+	return name != "clic" && !strings.HasPrefix(name, "clic-")
 }

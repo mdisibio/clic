@@ -7,7 +7,7 @@ services:
       for GOOS in darwin linux; do
         for GOARCH in amd64; do
           export GOOS GOARCH;
-          echo $$GOOS $$GOARCH;
+          echo ----- Building $$GOOS $$GOARCH -----;
           CGO_ENABLED=0 go build -v -o ../bin/clic-$$GOOS-$$GOARCH;
         done;
       done;"
@@ -16,8 +16,12 @@ services:
     working_dir: /usr/src/clic/src
 
   test:
-    image: docker:latest
+    build: ./test
+    command: npm test
+    working_dir: /test
     volumes:
-      - .:/usr/src/clic
+      - ./bin/clic-linux-amd64:/usr/local/bin/clic
+      - ./test:/test
       - /var/run/docker.sock:/var/run/docker.sock
-    working_dir: /usr/src/clic
+    environment:
+      - SKIP_MOUNT_TESTS=true
