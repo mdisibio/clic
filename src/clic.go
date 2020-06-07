@@ -47,37 +47,27 @@ func main() {
 		return
 	}
 
-	var f func([]string) error
+	var commands = map[string]func([]string) error{
+		"explain":   doExplain,
+		"fetch":     doFetch,
+		"install":   doInstall,
+		"link":      doLink,
+		"ls":        doList,
+		"run":       doRun,
+		"uninstall": doUninstall,
+		"unlink":    doUnlink,
+		"upgrade":   doUpgrade,
+	}
 
-	switch strings.ToLower(os.Args[1]) {
-	case "explain":
-		f = doExplain
-	case "fetch":
-		f = doFetch
-	case "install":
-		f = doInstall
-	case "link":
-		f = doLink
-	case "ls":
-		f = doList
-	case "run":
-		f = doRun
-	case "uninstall":
-		f = doUninstall
-	case "unlink":
-		f = doUnlink
-	case "upgrade":
-		f = doUpgrade
-	default:
+	f := commands[strings.ToLower(os.Args[1])]
+	if f == nil {
 		f = doHelp
 	}
 
-	if f != nil {
-		err := f(os.Args[2:])
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(255)
-		}
+	err := f(os.Args[2:])
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(255)
 	}
 }
 
