@@ -36,10 +36,36 @@ Other commands:
 * run - Run a command manually instead of through symlink and without installing
 * upgrade - Upgrade an installed command to the latest available version
 
-# Repository
-The repository of known commands is maintained in this repo.  Entries are manually curated for trustworthiness and functionality.  Please submit merge requests for additional   
+### Build 
+Cross-compile for all supported operating systems by running:
+```
+docker-compose run build
+```
+Output binaries are placed in the ./bin/ folder.
 
-# Future ideas:
+### Test
+The full test suite can be run natively with npm. Beware, these tests alter the test machine
+including uninstalling all commands.  This method requires Node.js, npm, and docker to be installed on the test machine, as well 
+as the clic executable to be in the $PATH.
+```
+cd test
+npm run test
+```
+
+Tests can instead be run containerized with the exception of a few volume mount tests. This method does not alter the test machine, and only requires docker to be installed.  Build must be done first.
+```
+docker-compose run build
+docker-compose run test
+```
+
+# Repository
+The repository of known commands is maintained in this repo.  Entries are manually curated for trustworthiness and functionality.  Please submit merge requests for additional entries.
+
+# Future enhancements:
+* Windows support
 * Ability pin a folder to a specific version of a tool, i.e. `clic pin terraform@0.11.13`. The correct command version is chosen based on $PWD
 * Support for custom repositories, or custom command definitions.
 * Search and list the repository
+
+# Remaining work
+* Linux user/group permissions?
