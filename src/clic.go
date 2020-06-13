@@ -21,6 +21,7 @@ func doHelp(_ []string) error {
 	fmt.Println("  uninstall  Uninstall command")
 	fmt.Println("  unlink     Delete a shell alias")
 	fmt.Println("  upgrade    Upgrade installed command to the latest version")
+	fmt.Println("  version    Print the clic version")
 	fmt.Println()
 	fmt.Println("Run 'clic COMMAND --help' for more information on a command.")
 
@@ -57,6 +58,7 @@ func main() {
 		"uninstall": doUninstall,
 		"unlink":    doUnlink,
 		"upgrade":   doUpgrade,
+		"version":   doVersion,
 	}
 
 	f := commands[strings.ToLower(os.Args[1])]

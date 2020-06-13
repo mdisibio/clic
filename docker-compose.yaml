@@ -3,14 +3,7 @@ version: '3.4'
 services:
   build:
     image: golang:latest
-    command: /bin/sh -c "
-      for GOOS in darwin linux; do
-        for GOARCH in amd64; do
-          export GOOS GOARCH;
-          echo ----- Building $$GOOS $$GOARCH -----;
-          CGO_ENABLED=0 go build -v -o ../bin/clic-$$GOOS-$$GOARCH;
-        done;
-      done;"
+    entrypoint: /usr/src/clic/build.sh
     volumes:
       - .:/usr/src/clic
     working_dir: /usr/src/clic/src
@@ -20,7 +13,7 @@ services:
     command: npm test
     working_dir: /test
     volumes:
-      - ./bin/clic-linux-amd64:/usr/local/bin/clic
+      - ./bin/linux-amd64/clic:/usr/local/bin/clic
       - ./test:/test
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
