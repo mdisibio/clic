@@ -83,10 +83,9 @@ func (r Repo) resolve(cmd CommandVersion) *RepoCommand {
 
 	cmdStr := cmd.toString()
 
-	for k, v := range r.Commands {
-		if k == cmdStr {
-			return &v
-		}
+	v, ok := r.Commands[cmdStr]
+	if ok {
+		return &v
 	}
 
 	return nil
